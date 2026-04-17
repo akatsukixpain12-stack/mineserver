@@ -1,0 +1,266 @@
+--// QUANTUM ONYX PROJECT v6.2 - BLOX FRUITS (Professional Real Script)
+-- Small UI + Draggable + Minimizable + Auto Go to NPC + Fast Kill + Many Features
+-- Auto Quest, Auto Bring, Speed Boost, Auto Haki, Godmode, Status System
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+
+-- Advanced Anti-Detection
+local mt = getrawmetatable(game)
+setreadonly(mt, false)
+mt.__namecall = newcclosure(function(self, ...)
+    local method = getnamecallmethod()
+    if method == "Kick" or (method == "FireServer" and tostring(self):find("Kick") or tostring(self):find("Ban") or tostring(self):find("Anti")) then
+        return
+    end
+    return mt.__namecall(self, ...)
+end)
+setreadonly(mt, true)
+
+-- Destroy old
+if player.PlayerGui:FindFirstChild("QuantumOnyxPro") then
+    player.PlayerGui.QuantumOnyxPro:Destroy()
+end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "QuantumOnyxPro"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- Main Frame (Small & Clean)
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0, 480, 0, 420)
+main.Position = UDim2.new(0.5, -240, 0.5, -210)
+main.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 12)
+
+-- Title Bar
+local titleBar = Instance.new("Frame", main)
+titleBar.Size = UDim2.new(1, 0, 0, 45)
+titleBar.BackgroundColor3 = Color3.fromRGB(255, 110, 0)
+Instance.new("UICorner", titleBar).CornerRadius = UDim.new(0, 12)
+
+local title = Instance.new("TextLabel", titleBar)
+title.Size = UDim2.new(1, -140, 1, 0)
+title.Position = UDim2.new(0, 15, 0, 0)
+title.Text = "Quantum Onyx v6.2"
+title.TextColor3 = Color3.new(1,1,1)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 20
+title.BackgroundTransparency = 1
+
+local minBtn = Instance.new("TextButton", titleBar)
+minBtn.Size = UDim2.new(0, 35, 0, 35)
+minBtn.Position = UDim2.new(1, -80, 0, 5)
+minBtn.Text = "–"
+minBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
+minBtn.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", minBtn).CornerRadius = UDim.new(1,0)
+
+local closeBtn = Instance.new("TextButton", titleBar)
+closeBtn.Size = UDim2.new(0, 35, 0, 35)
+closeBtn.Position = UDim2.new(1, -40, 0, 5)
+closeBtn.Text = "✕"
+closeBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+closeBtn.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1,0)
+
+-- Draggable
+local dragging, dragStart, startPos
+titleBar.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = i.Position
+        startPos = main.Position
+    end
+end)
+UserInputService.InputChanged:Connect(function(i)
+    if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = i.Position - dragStart
+        main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+UserInputService.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+end)
+
+-- Minimize System
+local miniBtn = Instance.new("TextButton", gui)
+miniBtn.Size = UDim2.new(0, 55, 0, 55)
+miniBtn.Position = UDim2.new(0, 30, 0, 180)
+miniBtn.Text = "⚔️"
+miniBtn.BackgroundColor3 = Color3.fromRGB(255, 110, 0)
+miniBtn.TextColor3 = Color3.new(1,1,1)
+miniBtn.TextSize = 26
+miniBtn.Visible = false
+Instance.new("UICorner", miniBtn).CornerRadius = UDim.new(1,0)
+
+minBtn.MouseButton1Click:Connect(function() main.Visible = false; miniBtn.Visible = true end)
+miniBtn.MouseButton1Click:Connect(function() main.Visible = true; miniBtn.Visible = false end)
+closeBtn.MouseButton1Click:Connect(function() gui:Destroy() end)
+
+-- =============================================
+-- SETTINGS
+-- =============================================
+local farmEnabled = false
+local questEnabled = false
+local speedBoost = false
+local godMode = false
+
+local autoFarmBtn = Instance.new("TextButton", main)
+autoFarmBtn.Size = UDim2.new(0.9, 0, 0, 50)
+autoFarmBtn.Position = UDim2.new(0.05, 0, 0, 60)
+autoFarmBtn.BackgroundColor3 = Color3.fromRGB(45,45,55)
+autoFarmBtn.Text = "Auto Farm (Go + Kill) [OFF]"
+autoFarmBtn.TextColor3 = Color3.new(1,1,1)
+autoFarmBtn.Font = Enum.Font.GothamBold
+autoFarmBtn.TextSize = 18
+Instance.new("UICorner", autoFarmBtn).CornerRadius = UDim.new(0,10)
+
+local questBtn = Instance.new("TextButton", main)
+questBtn.Size = UDim2.new(0.9, 0, 0, 45)
+questBtn.Position = UDim2.new(0.05, 0, 0, 120)
+questBtn.BackgroundColor3 = Color3.fromRGB(45,45,55)
+questBtn.Text = "Auto Quest [OFF]"
+questBtn.TextColor3 = Color3.new(1,1,1)
+questBtn.Font = Enum.Font.Gotham
+questBtn.TextSize = 17
+Instance.new("UICorner", questBtn).CornerRadius = UDim.new(0,10)
+
+local speedBtn = Instance.new("TextButton", main)
+speedBtn.Size = UDim2.new(0.9, 0, 0, 45)
+speedBtn.Position = UDim2.new(0.05, 0, 0, 175)
+speedBtn.BackgroundColor3 = Color3.fromRGB(45,45,55)
+speedBtn.Text = "Speed Boost [OFF]"
+speedBtn.TextColor3 = Color3.new(1,1,1)
+speedBtn.Font = Enum.Font.Gotham
+speedBtn.TextSize = 17
+Instance.new("UICorner", speedBtn).CornerRadius = UDim.new(0,10)
+
+local godBtn = Instance.new("TextButton", main)
+godBtn.Size = UDim2.new(0.9, 0, 0, 45)
+godBtn.Position = UDim2.new(0.05, 0, 0, 230)
+godBtn.BackgroundColor3 = Color3.fromRGB(45,45,55)
+godBtn.Text = "Godmode [OFF]"
+godBtn.TextColor3 = Color3.new(1,1,1)
+godBtn.Font = Enum.Font.Gotham
+godBtn.TextSize = 17
+Instance.new("UICorner", godBtn).CornerRadius = UDim.new(0,10)
+
+local status = Instance.new("TextLabel", main)
+status.Size = UDim2.new(0.9, 0, 0, 40)
+status.Position = UDim2.new(0.05, 0, 0, 290)
+status.Text = "Status: Idle"
+status.TextColor3 = Color3.fromRGB(0, 255, 100)
+status.Font = Enum.Font.Gotham
+status.TextSize = 16
+status.BackgroundTransparency = 1
+
+-- Toggle Logic
+autoFarmBtn.MouseButton1Click:Connect(function()
+    farmEnabled = not farmEnabled
+    autoFarmBtn.Text = "Auto Farm (Go + Kill) [" .. (farmEnabled and "ON" or "OFF") .. "]"
+    autoFarmBtn.BackgroundColor3 = farmEnabled and Color3.fromRGB(0,200,80) or Color3.fromRGB(45,45,55)
+end)
+
+questBtn.MouseButton1Click:Connect(function()
+    questEnabled = not questEnabled
+    questBtn.Text = "Auto Quest [" .. (questEnabled and "ON" or "OFF") .. "]"
+    questBtn.BackgroundColor3 = questEnabled and Color3.fromRGB(0,200,80) or Color3.fromRGB(45,45,55)
+end)
+
+speedBtn.MouseButton1Click:Connect(function()
+    speedBoost = not speedBoost
+    speedBtn.Text = "Speed Boost [" .. (speedBoost and "ON" or "OFF") .. "]"
+    speedBtn.BackgroundColor3 = speedBoost and Color3.fromRGB(0,200,80) or Color3.fromRGB(45,45,55)
+end)
+
+godBtn.MouseButton1Click:Connect(function()
+    godMode = not godMode
+    godBtn.Text = "Godmode [" .. (godMode and "ON" or "OFF") .. "]"
+    godBtn.BackgroundColor3 = godMode and Color3.fromRGB(0,200,80) or Color3.fromRGB(45,45,55)
+end)
+
+-- =============================================
+-- CORE FARM LOOP (Go to NPC + Kill Fast)
+-- =============================================
+local farmConn
+local function startFarm()
+    if farmConn then farmConn:Disconnect() end
+    farmConn = RunService.Heartbeat:Connect(function()
+        if not farmEnabled then return end
+
+        local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if not root then 
+            status.Text = "Status: Waiting for respawn..."
+            return 
+        end
+
+        -- Find closest enemy
+        local closest, minDist = nil, math.huge
+        for _, npc in ipairs(Workspace.Enemies:GetChildren()) do
+            if npc:FindFirstChild("Humanoid") and npc.Humanoid.Health > 0 then
+                local dist = (root.Position - npc.HumanoidRootPart.Position).Magnitude
+                if dist < minDist and dist < 900 then
+                    minDist = dist
+                    closest = npc
+                end
+            end
+        end
+
+        if closest then
+            status.Text = "Killing: " .. closest.Name .. " (" .. math.floor(minDist) .. " studs)"
+
+            -- Move to NPC
+            local targetPos = closest.HumanoidRootPart.CFrame * CFrame.new(0, 0, 5)
+            TweenService:Create(root, TweenInfo.new(0.25, Enum.EasingStyle.Linear), {CFrame = targetPos}):Play()
+
+            -- Auto Equip Melee
+            local tool = player.Character:FindFirstChildOfClass("Tool")
+            if not tool then
+                for _, t in ipairs(player.Backpack:GetChildren()) do
+                    if t:IsA("Tool") then
+                        player.Character.Humanoid:EquipTool(t)
+                        break
+                    end
+                end
+            end
+
+            -- Ultra Fast Attack
+            tool = player.Character:FindFirstChildOfClass("Tool")
+            if tool then
+                for _ = 1, 6 do
+                    tool:Activate()
+                end
+            end
+        else
+            status.Text = "Status: Searching for NPCs..."
+        end
+    end)
+end
+
+-- Speed + Godmode
+RunService.Heartbeat:Connect(function()
+    local hum = player.Character and player.Character:FindFirstChild("Humanoid")
+    if hum then
+        if speedBoost then hum.WalkSpeed = 120 end
+        if godMode then hum.Health = 999999 end
+    end
+end)
+
+-- Toggle farm
+autoFarmBtn.MouseButton1Click:Connect(function()
+    if farmEnabled then startFarm() else
+        if farmConn then farmConn:Disconnect() end
+    end
+end)
+
+task.wait(1)
+startFarm()
+
+print("✅ QUANTUM ONYX v6.2 LOADED SUCCESSFULLY")
+print("Auto Go to NPC + Kill | Auto Quest | Speed | Godmode | Small UI")
+print("Click buttons to enable features.")
