@@ -251,7 +251,10 @@
       <div class="section-label">Discord Presence</div>
       <div class="discord-card" id="discordCard">
         <div class="avatar-wrapper">
-          <img src="<img src="https://lanyard.rest" alt="Discord Status" />?size=256" alt="avatar" class="avatar" id="discordAvatar">
+          <img src="https://cdn.discordapp.com/avatars/1074655922921676811/0f757e7f3d99bbb1e0de60772d1ca2b4.png?size=256"
+     alt="Everest Prince avatar"
+     class="avatar"
+     id="discordAvatar">
           <div class="status-dot" id="statusDot" style="background:#747f8d;"></div>
         </div>
         <div class="discord-info">
@@ -455,7 +458,7 @@
       entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
     }, { threshold: 0.1 });
     document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
-
+const res = await fetch('https://api.lanyard.rest/v1/users/1074655922921676811');
     async function fetchLanyard() {
       try {
         const res = await fetch('https://api.lanyard.rest/v1/users/1378350961285795870');
@@ -464,14 +467,19 @@
       } catch (e) { console.log('Lanyard fetch failed'); }
     }
 
-    function updateDiscordUI(data) {
-      const statusColors = { online: '#23a55a', idle: '#f0b232', dnd: '#f23f43', offline: '#747f8d' };
-      document.getElementById('statusDot').style.background = statusColors[data.discord_status] || '#747f8d';
-      document.getElementById('statusBadge').innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="${statusColors[data.discord_status] || '#747f8d'}"><circle cx="12" cy="12" r="10"/></svg> ${data.discord_status}`;
-      if (data.listening_to_spotify && data.spotify) {
-        document.querySelector('.music-track').textContent = data.spotify.song;
-        document.querySelector('.music-artist').textContent = data.spotify.artist;
-      }
+    const user = data.discord_user;
+
+if (user) {
+  document.getElementById('discordDisplayName').textContent =
+    user.display_name || user.global_name || user.username;
+
+  document.getElementById('discordUsername').textContent = `@${user.username}`;
+
+  if (user.avatar) {
+    document.getElementById('discordAvatar').src =
+      `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=256`;
+  }
+}
     }
     fetchLanyard();
     setInterval(fetchLanyard, 30000);
