@@ -233,7 +233,7 @@
     <!-- Hero -->
     <section class="hero">
       <div class="views-counter"><span id="viewCount">585</span> views</div>
-      <h1 class="hero-title">hi, im <span class="highlight">EVEREST PRINCE</span></h1>
+      <h1 class="hero-title">hi, im <span class="highlight">EVEREST PRInCE</span></h1>
       <div class="role-container">
         <span class="role-prefix">i am</span>
         <div class="role-box" id="roleBox"><span class="role-text" id="roleText"></span></div>
@@ -313,7 +313,7 @@
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
       </div>
       <div class="music-main">
-        <div class="music-track">x-cool</div>
+        <div class="music-track">X-cool</div>
         <div class="music-artist">extended slowed</div>
         <div class="music-progress-row">
           <span class="music-time" id="currentTime">0:00</span>
@@ -458,28 +458,30 @@
       entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
     }, { threshold: 0.1 });
     document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
-const res = await fetch('https://api.lanyard.rest/v1/users/1074655922921676811');
     async function fetchLanyard() {
       try {
-        const res = await fetch('https://api.lanyard.rest/v1/users/1378350961285795870');
+        const res = await fetch('https://api.lanyard.rest/v1/users/1074655922921676811');
         const data = await res.json();
         if (data.success) updateDiscordUI(data.data);
       } catch (e) { console.log('Lanyard fetch failed'); }
     }
 
-    const user = data.discord_user;
-
-if (user) {
-  document.getElementById('discordDisplayName').textContent =
-    user.display_name || user.global_name || user.username;
-
-  document.getElementById('discordUsername').textContent = `@${user.username}`;
-
-  if (user.avatar) {
-    document.getElementById('discordAvatar').src =
-      `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=256`;
-  }
-}
+    function updateDiscordUI(data) {
+      const statusColors = { online: '#23a55a', idle: '#f0b232', dnd: '#f23f43', offline: '#747f8d' };
+      const user = data.discord_user;
+      if (user) {
+        document.getElementById('discordDisplayName').textContent = user.display_name || user.global_name || user.username;
+        document.getElementById('discordUsername').textContent = `@${user.username}`;
+        if (user.avatar) {
+          document.getElementById('discordAvatar').src = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=256`;
+        }
+      }
+      document.getElementById('statusDot').style.background = statusColors[data.discord_status] || '#747f8d';
+      document.getElementById('statusBadge').innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="${statusColors[data.discord_status] || '#747f8d'}"><circle cx="12" cy="12" r="10"/></svg> ${data.discord_status}`;
+      if (data.listening_to_spotify && data.spotify) {
+        document.querySelector('.music-track').textContent = data.spotify.song;
+        document.querySelector('.music-artist').textContent = data.spotify.artist;
+      }
     }
     fetchLanyard();
     setInterval(fetchLanyard, 30000);
