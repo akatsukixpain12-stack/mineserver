@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EVEREST PRINCE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0a0a0a;
+      --bg-card: #111111;
+      --bg-elevated: #161616;
+      --text: #ffffff;
+      --text-muted: #888888;
+      --text-dim: #555555;
+      --border: #222222;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      min-height: 100vh;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .bg-mesh {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 40%, rgba(255,255,255,0.03) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 40% at 80% 60%, rgba(255,255,255,0.02) 0%, transparent 50%);
+    }
+    .bg-lines {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: 0.15;
+      background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    .noise {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+    .cursor-glow {
+      position: fixed; width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%);
+      border-radius: 50%; pointer-events: none; z-index: 0;
+      transform: translate(-50%, -50%);
+    }
+    .container { position: relative; z-index: 2; max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+    /* ===== TOUCH RIPPLE ===== */
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
+      transform: scale(0);
+      animation: ripple-anim 0.6s ease-out forwards;
+      pointer-events: none;
+      z-index: 10;
+    }
+    @keyframes ripple-anim {
+      to { transform: scale(4); opacity: 0; }
+    }
+
+    /* Hero */
+    .hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; position: relative; }
+    .views-counter {
+      position: absolute; top: 80px; font-family: 'JetBrains Mono', monospace; font-size: 12px;
+      letter-spacing: 3px; color: var(--text-dim); text-transform: uppercase; display: flex; align-items: center; gap: 8px;
+    }
+    .views-counter::before { content: ''; width: 6px; height: 6px; background: var(--text-dim); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:0.3} 50%{opacity:1} }
+    .hero-title { font-size: clamp(2.5rem, 8vw, 5rem); font-weight: 800; letter-spacing: -2px; margin-bottom: 24px; line-height: 1.1; }
+    .hero-title .highlight { background: linear-gradient(135deg, #fff 0%, #888 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+    .role-container { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; min-height: 60px; }
+    .role-prefix { font-family: 'JetBrains Mono', monospace; font-size: clamp(1rem, 3vw, 1.5rem); color: var(--text-muted); font-weight: 400; }
+    .role-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 28px; min-width: 280px; position: relative; overflow: hidden; }
+    .role-box::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent); animation: shimmer 3s infinite; }
+    @keyframes shimmer { 0%{left:-100%} 100%{left:100%} }
+    .role-text { font-family: 'JetBrains Mono', monospace; font-size: clamp(1rem, 3vw, 1.4rem); font-weight: 600; color: var(--text); display: inline-block; min-width: 200px; }
+    .role-subtext { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--text-dim); margin-top: 12px; letter-spacing: 2px; text-transform: uppercase; opacity: 0; transform: translateY(10px); transition: all 0.5s cubic-bezier(0.4,0,0.2,1); }
+    .role-subtext.visible { opacity: 1; transform: translateY(0); }
+
+    .scroll-indicator { position: absolute; bottom: 60px; display: flex; flex-direction: column; align-items: center; gap: 12px; animation: bounce 2s infinite; }
+    .scroll-indicator span { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 4px; color: var(--text-dim); text-transform: uppercase; }
+    .scroll-indicator svg { width: 20px; height: 20px; color: var(--text-dim); }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(10px)} }
+
+    /* Discord */
+    .discord-section { padding: 100px 0; }
+    .section-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 4px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 40px; text-align: center; }
+    .discord-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 32px; display: flex; align-items: center; gap: 24px; position: relative; overflow: hidden; transition: transform 0.3s ease, border-color 0.3s ease; }
+    .discord-card:hover { transform: translateY(-4px); border-color: #333; }
+    .discord-card::after { content: ''; position: absolute; top: 0; right: 0; width: 150px; height: 150px; background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%); pointer-events: none; }
+    .avatar-wrapper { position: relative; flex-shrink: 0; }
+    .avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); }
+    .status-dot { position: absolute; bottom: 4px; right: 4px; width: 18px; height: 18px; border-radius: 50%; background: #747f8d; border: 3px solid var(--bg-card); }
+    .discord-info { flex: 1; }
+    .discord-name { font-size: 1.3rem; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .discord-username { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-muted); }
+    .discord-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 11px; color: var(--text-muted); margin-top: 8px; }
+
+    /* About */
+    .about-section { padding: 100px 0; }
+    .about-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 40px; }
+    .about-text { font-size: 1.1rem; line-height: 1.8; color: var(--text-muted); max-width: 600px; }
+    .about-text p { margin-bottom: 16px; }
+    .about-text .accent-word { color: var(--text); font-weight: 600; }
+
+    /* Skills */
+    .skills-section { padding: 60px 0; }
+    .skills-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+    .skill-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; transition: all 0.3s ease; cursor: default; }
+    .skill-card:hover { border-color: #333; transform: translateY(-2px); }
+    .skill-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 8px; }
+    .skill-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .skill-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; color: var(--text-muted); }
+
+    /* GitHub Link */
+    .links-section { padding: 60px 0 140px; }
+    .links-grid { display: grid; gap: 16px; }
+    .link-card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 28px 32px;
+      display: flex; flex-direction: column; gap: 6px; position: relative; overflow: hidden;
+      transition: all 0.3s ease; cursor: pointer; text-decoration: none; color: inherit;
+    }
+    .link-card:hover { transform: translateY(-3px); border-color: #333; }
+    .link-card::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, transparent, #fff, transparent);
+      opacity: 0; transition: opacity 0.3s ease;
+    }
+    .link-card:hover::after { opacity: 0.6; }
+    .link-card::before {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 60px;
+      background: linear-gradient(to top, rgba(255,255,255,0.04), transparent);
+      opacity: 0; transition: opacity 0.3s ease;
+    }
+    .link-card:hover::before { opacity: 1; }
+    .link-name { font-size: 1.2rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .link-name .arrow { font-family: 'JetBrains Mono', monospace; color: var(--text-muted); }
+    .link-url { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-muted); }
+
+    /* ===== MUSIC PLAYER (screenshot style) ===== */
+    .music-player {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: rgba(17,17,17,0.95); backdrop-filter: blur(20px);
+      border: 1px solid var(--border); border-radius: 20px; padding: 16px 20px;
+      display: flex; align-items: center; gap: 16px; z-index: 100;
+      max-width: 420px; width: calc(100% - 48px); box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .music-left { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; }
+    .music-cover {
+      width: 52px; height: 52px; border-radius: 10px; background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .music-cover img { width: 100%; height: 100%; object-fit: cover; }
+    .music-cover svg { color: var(--text-dim); }
+    .music-main { flex: 1; min-width: 0; }
+    .music-track { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+    .music-artist { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .music-progress-row {
+      display: flex; align-items: center; gap: 10px; margin-top: 8px;
+    }
+    .music-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-dim); min-width: 32px; }
+    .progress-bar {
+      flex: 1; height: 4px; background: var(--bg-elevated); border-radius: 2px;
+      overflow: hidden; cursor: pointer; position: relative;
+    }
+    .progress-fill {
+      height: 100%; width: 0%; background: var(--text); border-radius: 2px;
+      transition: width 0.1s linear;
+    }
+    .music-controls-row {
+      display: flex; align-items: center; gap: 14px; margin-top: 10px;
+    }
+    .music-btn {
+      background: none; border: none; color: var(--text-muted); cursor: pointer;
+      padding: 2px; display: flex; align-items: center; justify-content: center;
+      transition: color 0.2s;
+    }
+    .music-btn:hover { color: var(--text); }
+    .music-btn svg { display: block; }
+
+    .music-right {
+      display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+      margin-left: 8px;
+    }
+    .music-top-icons {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .music-top-btn {
+      background: none; border: none; color: var(--text-dim); cursor: pointer;
+      padding: 2px; display: flex; align-items: center; justify-content: center;
+      transition: color 0.2s;
+    }
+    .music-top-btn:hover { color: var(--text); }
+    .volume-slider {
+      -webkit-appearance: none; appearance: none;
+      width: 80px; height: 4px; background: var(--bg-elevated);
+      border-radius: 2px; outline: none; cursor: pointer;
+    }
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 14px; height: 14px; background: var(--text);
+      border-radius: 50%; cursor: pointer;
+    }
+    .volume-slider::-moz-range-thumb {
+      width: 14px; height: 14px; background: var(--text);
+      border-radius: 50%; cursor: pointer; border: none;
+    }
+
+    .fade-in { opacity: 0; transform: translateY(30px); transition: opacity 0.8s ease, transform 0.8s ease; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 640px) {
+      .discord-card { flex-direction: column; text-align: center; }
+      .role-box { min-width: 240px; padding: 10px 20px; }
+      .about-card { padding: 24px; }
+      .music-player { padding: 12px 14px; gap: 10px; }
+      .music-right { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-mesh"></div>
+  <div class="bg-lines"></div>
+  <div class="noise"></div>
+  <div class="cursor-glow" id="cursorGlow"></div>
+
+  <div class="container">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="views-counter"><span id="viewCount">585</span> views</div>
+      <h1 class="hero-title">hi, im <span class="highlight">EVEREST PRInCE</span></h1>
+      <div class="role-container">
+        <span class="role-prefix">i am</span>
+        <div class="role-box" id="roleBox"><span class="role-text" id="roleText"></span></div>
+      </div>
+      <div class="role-subtext" id="roleSubtext"></div>
+
+      <div class="scroll-indicator">
+        <span>scroll down</span>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+      </div>
+    </section>
+
+    <!-- Discord -->
+    <section class="discord-section fade-in" id="discordSection">
+      <div class="section-label">Discord Presence</div>
+      <div class="discord-card" id="discordCard">
+        <div class="avatar-wrapper">
+          <img src="https://cdn.discordapp.com/avatars/1074655922921676811/0f757e7f3d99bbb1e0de60772d1ca2b4.png?size=256" alt="Everest Prince avatar" class="avatar" id="discordAvatar">
+          <div class="status-dot" id="statusDot" style="background:#747f8d;"></div>
+        </div>
+        <div class="discord-info">
+          <div class="discord-name" id="discordDisplayName">Everest Prince</div>
+          <div class="discord-username" id="discordUsername">@everest_prince</div>
+          <div style="margin-top:10px;">
+            <span class="discord-badge" id="statusBadge">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+              offline
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- About -->
+    <section class="about-section fade-in" id="aboutSection">
+      <div class="section-label">About</div>
+      <div class="about-card" id="aboutCard">
+        <div class="about-text">
+          <p>I started coding at <span class="accent-word">13</span>, diving deep into the world of programming and never looking back.</p>
+          <p>I'm an <span class="accent-word">international chess player</span>, bringing the same strategic thinking from the board to my code.</p>
+          <p>I specialize in <span class="accent-word">anti-cheat bypassing</span>, low-level systems, and web development — turning complex problems into elegant solutions.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Skills -->
+    <section class="skills-section fade-in" id="skillsSection">
+      <div class="section-label">Expertise</div>
+      <div class="skills-grid">
+        <div class="skill-card" id="skill1"><div class="skill-title">Developer</div><div class="skill-tags"><span class="skill-tag">C</span><span class="skill-tag">C++</span></div></div>
+        <div class="skill-card" id="skill2"><div class="skill-title">Anti Cheat Bypasser</div><div class="skill-tags"><span class="skill-tag">C++</span><span class="skill-tag">ASM</span><span class="skill-tag">Memory</span><span class="skill-tag">Hooks</span></div></div>
+        <div class="skill-card" id="skill3"><div class="skill-title">Executor Developer</div><div class="skill-tags"><span class="skill-tag">Luau</span></div></div>
+        <div class="skill-card" id="skill4"><div class="skill-title">Web Developer</div><div class="skill-tags"><span class="skill-tag">HTML</span><span class="skill-tag">CSS</span><span class="skill-tag">JS</span></div></div>
+        <div class="skill-card" id="skill5"><div class="skill-title">International Player</div><div class="skill-tags"><span class="skill-tag">Chess</span><span class="skill-tag">Strategy</span></div></div>
+      </div>
+    </section>
+
+    <!-- GitHub Link -->
+    <section class="links-section fade-in" id="linksSection">
+      <div class="section-label">Links</div>
+      <div class="links-grid">
+        <a href="https://github.com/akatsukixpain12-stack" target="_blank" class="link-card" id="linkCard1">
+          <div class="link-name"><span class="arrow">&gt;</span> GitHub <span class="arrow">&lt;</span></div>
+          <div class="link-url">github.com/akatsukixpain12-stack</div>
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===== MUSIC PLAYER (screenshot style) ===== -->
+  <div class="music-player" id="musicPlayer">
+    <div class="music-left">
+      <div class="music-cover">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      </div>
+      <div class="music-main">
+        <div class="music-track">X-cool</div>
+        <div class="music-artist">extended slowed</div>
+        <div class="music-progress-row">
+          <span class="music-time" id="currentTime">0:00</span>
+          <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+          <span class="music-time" id="duration">0:00</span>
+        </div>
+        <div class="music-controls-row">
+          <button class="music-btn" id="btnPlay">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <button class="music-btn" id="btnShuffle">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+          </button>
+          <button class="music-btn" id="btnRepeat">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          </button>
+          <button class="music-btn" id="btnMute">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="music-right">
+      <div class="music-top-icons">
+        <button class="music-top-btn" id="btnExpand" title="Expand">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+        </button>
+        <button class="music-top-btn" id="btnMinimize" title="Minimize">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+      <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="80">
+    </div>
+  </div>
+
+  <!-- REAL AUDIO -->
+  <audio id="audioPlayer" src="X-COOL! (Instrumental - Slowed) - tienanh109.mp3" preload="metadata"></audio>
+
+  <script>
+    /* ===== TOUCH RIPPLE ===== */
+    function createRipple(e, element) {
+      const ripple = document.createElement('span');
+      ripple.classList.add('ripple');
+      const rect = element.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : rect.left + rect.width/2);
+      const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : rect.top + rect.height/2);
+      const x = clientX - rect.left - size / 2;
+      const y = clientY - rect.top - size / 2;
+      ripple.style.width = ripple.style.height = size + 'px';
+      ripple.style.left = x + 'px';
+      ripple.style.top = y + 'px';
+      element.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    }
+
+    const rippleTargets = [
+      document.getElementById('roleBox'),
+      document.getElementById('discordCard'),
+      document.getElementById('aboutCard'),
+      document.getElementById('skill1'),
+      document.getElementById('skill2'),
+      document.getElementById('skill3'),
+      document.getElementById('skill4'),
+      document.getElementById('skill5'),
+      document.getElementById('linkCard1'),
+      document.getElementById('musicPlayer'),
+      document.getElementById('btnPlay'),
+      document.getElementById('btnShuffle'),
+      document.getElementById('btnRepeat'),
+      document.getElementById('btnMute')
+    ];
+
+    rippleTargets.forEach(el => {
+      if (!el) return;
+      el.style.position = 'relative';
+      el.style.overflow = 'hidden';
+      el.addEventListener('click', (e) => createRipple(e, el));
+      el.addEventListener('touchstart', (e) => createRipple(e, el), {passive: true});
+    });
+
+    /* ===== ROLE ROTATION ===== */
+    const roles = [
+      { text: 'developer', sub: 'C / C++' },
+      { text: 'anti cheat bypasser', sub: 'C++ / ASM / Memory / Hooks' },
+      { text: 'executor developer', sub: 'Luau' },
+      { text: 'web developer', sub: 'HTML / CSS / JS' },
+      { text: 'international player', sub: 'Chess' }
+    ];
+    let currentRole = 0, isTyping = false;
+    const roleText = document.getElementById('roleText');
+    const roleSubtext = document.getElementById('roleSubtext');
+    const chars = '!<>-_\\/[]{}—=+*^?#________';
+
+    function scrambleText(element, finalText, speed = 30) {
+      return new Promise(resolve => {
+        let iteration = 0;
+        const interval = setInterval(() => {
+          element.textContent = finalText.split('').map((char, index) => {
+            if (index < iteration) return finalText[index];
+            if (char === ' ') return ' ';
+            return chars[Math.floor(Math.random() * chars.length)];
+          }).join('');
+          iteration += 1/2;
+          if (iteration >= finalText.length) { element.textContent = finalText; clearInterval(interval); resolve(); }
+        }, speed);
+      });
+    }
+
+    async function cycleRoles() {
+      if (isTyping) return;
+      isTyping = true;
+      const role = roles[currentRole];
+      roleSubtext.classList.remove('visible');
+      await new Promise(r => setTimeout(r, 300));
+      await scrambleText(roleText, role.text, 25);
+      await new Promise(r => setTimeout(r, 200));
+      roleSubtext.textContent = role.sub;
+      roleSubtext.classList.add('visible');
+      await new Promise(r => setTimeout(r, 3000));
+      currentRole = (currentRole + 1) % roles.length;
+      isTyping = false;
+      cycleRoles();
+    }
+    cycleRoles();
+
+    function animateViews() {
+      const el = document.getElementById('viewCount');
+      let current = 0, target = 585, increment = Math.ceil(target / 50);
+      const timer = setInterval(() => {
+        current += increment;
+        if (current >= target) { current = target; clearInterval(timer); }
+        el.textContent = current;
+      }, 30);
+    }
+    animateViews();
+
+    const cursorGlow = document.getElementById('cursorGlow');
+    document.addEventListener('mousemove', (e) => { cursorGlow.style.left = e.clientX + 'px'; cursorGlow.style.top = e.clientY + 'px'; });
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+    async function fetchLanyard() {
+      try {
+        const res = await fetch('https://api.lanyard.rest/v1/users/1074655922921676811');
+        const data = await res.json();
+        if (data.success) updateDiscordUI(data.data);
+      } catch (e) { console.log('Lanyard fetch failed'); }
+    }
+
+    function updateDiscordUI(data) {
+      const statusColors = { online: '#23a55a', idle: '#f0b232', dnd: '#f23f43', offline: '#747f8d' };
+      const user = data.discord_user;
+      if (user) {
+        document.getElementById('discordDisplayName').textContent = user.display_name || user.global_name || user.username;
+        document.getElementById('discordUsername').textContent = `@${user.username}`;
+        if (user.avatar) {
+          document.getElementById('discordAvatar').src = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=256`;
+        }
+      }
+      document.getElementById('statusDot').style.background = statusColors[data.discord_status] || '#747f8d';
+      document.getElementById('statusBadge').innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="${statusColors[data.discord_status] || '#747f8d'}"><circle cx="12" cy="12" r="10"/></svg> ${data.discord_status}`;
+      if (data.listening_to_spotify && data.spotify) {
+        document.querySelector('.music-track').textContent = data.spotify.song;
+        document.querySelector('.music-artist').textContent = data.spotify.artist;
+      }
+    }
+    fetchLanyard();
+    setInterval(fetchLanyard, 30000);
+
+    setInterval(() => {
+      const el = document.getElementById('viewCount');
+      let current = parseInt(el.textContent);
+      if (Math.random() > 0.7) el.textContent = current + 1;
+    }, 5000);
+
+    /* ===== REAL AUDIO PLAYER ===== */
+    const audio = document.getElementById('audioPlayer');
+    const btnPlay = document.getElementById('btnPlay');
+    const progressFill = document.getElementById('progressFill');
+    const progressBar = document.getElementById('progressBar');
+    const currentTimeEl = document.getElementById('currentTime');
+    const durationEl = document.getElementById('duration');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const btnMute = document.getElementById('btnMute');
+    const btnRepeat = document.getElementById('btnRepeat');
+    let isPlaying = false;
+    let isMuted = false;
+    let isRepeating = false;
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    audio.addEventListener('loadedmetadata', () => {
+      durationEl.textContent = formatTime(audio.duration);
+    });
+
+    audio.addEventListener('timeupdate', () => {
+      const pct = (audio.currentTime / audio.duration) * 100;
+      progressFill.style.width = pct + '%';
+      currentTimeEl.textContent = formatTime(audio.currentTime);
+    });
+
+    audio.addEventListener('ended', () => {
+      if (isRepeating) {
+        audio.currentTime = 0;
+        audio.play();
+      } else {
+        isPlaying = false;
+        btnPlay.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+        progressFill.style.width = '0%';
+        currentTimeEl.textContent = '0:00';
+      }
+    });
+
+    btnPlay.addEventListener('click', () => {
+      if (isPlaying) {
+        audio.pause();
+        btnPlay.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+      } else {
+        audio.play();
+        btnPlay.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+      }
+      isPlaying = !isPlaying;
+    });
+
+    progressBar.addEventListener('click', (e) => {
+      const rect = progressBar.getBoundingClientRect();
+      const pct = (e.clientX - rect.left) / rect.width;
+      audio.currentTime = pct * audio.duration;
+    });
+
+    volumeSlider.addEventListener('input', (e) => {
+      audio.volume = e.target.value / 100;
+      if (audio.volume === 0) {
+        btnMute.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
+      } else {
+        btnMute.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
+      }
+    });
+
+    btnMute.addEventListener('click', () => {
+      isMuted = !isMuted;
+      audio.muted = isMuted;
+      if (isMuted) {
+        btnMute.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
+      } else {
+        btnMute.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
+      }
+    });
+
+    btnRepeat.addEventListener('click', () => {
+      isRepeating = !isRepeating;
+      btnRepeat.style.color = isRepeating ? 'var(--text)' : 'var(--text-muted)';
+    });
+  </script>
+</body>
+</html>
