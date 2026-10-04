@@ -1,0 +1,3 @@
+[submodule "vendor/Pumpkin"]
+	path = vendor/Pumpkin
+	url = https://github.com/Pumpkin-MC/Pumpkin.git
