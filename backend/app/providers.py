@@ -38,7 +38,7 @@ async def curseforge_file(mid,mc,loader,project_type="mod"):
         if server_pack:return server_pack
         linked=next((x for x in available if x.get("serverPackFileId")),None)
         if linked:
-            rr=await c.get(f"{CURSEFORGE}/mods/{mid}/files/{linked["serverPackFileId"]}",headers=h)
+            rr=await c.get(f"{CURSEFORGE}/mods/{mid}/files/{linked['serverPackFileId']}",headers=h)
             if rr.status_code<400:
                 item=rr.json().get("data",{})
                 if item.get("downloadUrl"):return item
