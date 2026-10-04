@@ -21,6 +21,7 @@ class Settings:
     )
     modrinth_user_agent:str=os.getenv("MODRINTH_USER_AGENT","akatsukixpain12-stack/mineserver/3.0")
     firestore_collection:str=os.getenv("FIRESTORE_COLLECTION","mineserver_servers")
+    backup_bucket:str=os.getenv("BACKUP_BUCKET","")
     local_db:str=os.getenv("LOCAL_DB","./mineserver.db")
 
     @property
