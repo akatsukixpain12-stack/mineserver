@@ -1,0 +1,21 @@
+from __future__ import annotations
+import os
+from dataclasses import dataclass
+@dataclass(frozen=True)
+class Settings:
+    app_name: str = os.getenv("APP_NAME", "MineHub Control Plane")
+    project_id: str = os.getenv("GOOGLE_CLOUD_PROJECT", os.getenv("GCP_PROJECT", ""))
+    compute_zone: str = os.getenv("COMPUTE_ZONE", "asia-south1-a")
+    network: str = os.getenv("COMPUTE_NETWORK", "default")
+    machine_type: str = os.getenv("MINECRAFT_MACHINE_TYPE", "e2-small")
+    disk_gb: int = int(os.getenv("MINECRAFT_DISK_GB", "20"))
+    control_url: str = os.getenv("CONTROL_URL", "http://localhost:8080").rstrip("/")
+    admin_token: str = os.getenv("ADMIN_TOKEN", "")
+    cors_origins: str = os.getenv("CORS_ORIGINS", "*")
+    curseforge_api_key: str = os.getenv("CURSEFORGE_API_KEY", "")
+    modrinth_user_agent: str = os.getenv("MODRINTH_USER_AGENT", "akatsukixpain12-stack/mineserver/1.0")
+    firestore_collection: str = os.getenv("FIRESTORE_COLLECTION", "minehub_servers")
+    local_db: str = os.getenv("LOCAL_DB", "./minehub.db")
+    @property
+    def cors_list(self): return [x.strip() for x in self.cors_origins.split(",") if x.strip()]
+settings=Settings()
