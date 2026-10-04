@@ -1,7 +1,7 @@
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: minehub-control
+  name: mineserver-control
 spec:
   template:
     metadata:
@@ -12,10 +12,12 @@ spec:
     spec:
       timeoutSeconds: 3600
       containers:
-      - image: REGION-docker.pkg.dev/PROJECT_ID/minehub/control:latest
+      - image: REGION-docker.pkg.dev/PROJECT_ID/mineserver/control:latest
         ports:
         - containerPort: 8080
         env:
+        - name: GOOGLE_CLIENT_ID
+          value: REPLACE_WITH_GOOGLE_WEB_CLIENT_ID
         - name: GOOGLE_CLOUD_PROJECT
           value: PROJECT_ID
         - name: COMPUTE_ZONE
@@ -27,10 +29,10 @@ spec:
         - name: ADMIN_TOKEN
           valueFrom:
             secretKeyRef:
-              name: minehub-admin-token
+              name: mineserver-admin-token
               key: latest
         - name: CURSEFORGE_API_KEY
           valueFrom:
             secretKeyRef:
-              name: curseforge-api-key
+              name: mineserver-curseforge-api-key
               key: latest

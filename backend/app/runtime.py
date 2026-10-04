@@ -5,8 +5,12 @@ import httpx
 from fastapi import HTTPException
 from .config import settings
 import asyncio
+import time
 
-UA="MineHub/2.0"
+UA="Mineserver/2.0"
+
+_VERSION_CACHE={}
+_VERSION_CACHE_TTL=300
 
 RUNTIMES=[
  {"id":"vanilla","name":"Vanilla","kind":"server","family":"official","loaders":[],"description":"Official Mojang Java server"},
@@ -72,6 +76,24 @@ async def catalog():
         results = dict(zip(tasks.keys(), values))
         results["mineserver"] = [{"id":"mineserver-nightly","type":"native","minecraft":"bundled"}]
         return results
+
+async def versions_for(runtime:str):
+    runtime=runtime.lower()
+    now=time.monotonic()
+    cached=_VERSION_CACHE.get(runtime)
+    if cached and cached[0]>now:
+        return {runtime:cached[1]}
+    async with httpx.AsyncClient(timeout=12) as c:
+        if runtime=="vanilla": data=await vanilla_versions(c)
+        elif runtime in {"paper","folia","purpur"}: data=await paper_versions(c,runtime)
+        elif runtime=="fabric": data=await fabric_versions(c)
+        elif runtime=="quilt": data=await quilt_versions(c)
+        elif runtime=="forge": data=await maven_versions(c,"https://maven.minecraftforge.net/net/minecraftforge/forge/maven-metadata.xml")
+        elif runtime=="neoforge": data=await maven_versions(c,"https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml")
+        elif runtime=="mineserver": data=[{"id":"mineserver-nightly","type":"native","minecraft":"bundled"}]
+        else: raise ValueError(f"Unknown runtime: {runtime}")
+    _VERSION_CACHE[runtime]=(now+_VERSION_CACHE_TTL,data)
+    return {runtime:data}
 
 async def resolve_runtime(runtime,mc):
     runtime=runtime.lower()

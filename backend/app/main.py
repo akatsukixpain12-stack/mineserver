@@ -9,7 +9,7 @@ from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from pydantic import BaseModel,Field
 from .compute import create_vm,delete_vm,resolve_jar_url,vm_action
-from .runtime import RUNTIMES,catalog as runtime_catalog
+from .runtime import RUNTIMES,catalog as runtime_catalog,versions_for as runtime_versions
 from .config import settings
 from .providers import curseforge_file,curseforge_search,modrinth_search,modrinth_version
 from .store import store
@@ -71,7 +71,7 @@ async def healthz(): return {"ok":True,"persistent_store":store.persistent,"time
 
 @app.get("/api/config")
 async def public_config():
-    return {"app_name":settings.app_name,"auth":"google","google_client_id":settings.google_client_id}
+    return {"app_name":settings.app_name,"auth":"google","google_client_id":settings.google_client_id,"google_configured":bool(settings.google_client_id),"web_control_plane":True,"desktop_app":True}
 
 
 @app.post("/api/auth/check")
@@ -156,8 +156,10 @@ async def runtimes():
 
 
 @app.get("/api/catalog/versions")
-async def versions():
+async def versions(runtime:str|None=None):
     try:
+        if runtime:
+            return {"versions":await runtime_versions(runtime)}
         return {"versions":await runtime_catalog()}
     except Exception as e:
         raise HTTPException(502,f"Version catalog unavailable: {e}")

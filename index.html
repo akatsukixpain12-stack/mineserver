@@ -112,18 +112,31 @@ async function selectRuntime(id){
   state.runtime=id;
   document.querySelectorAll('.runtime').forEach(b=>b.classList.toggle('selected',b.dataset.runtime===id));
   $('versions').innerHTML='<div class="empty">Loading live versions…</div>';
+  $('versionCount').textContent='Loading…';
   try{
-    if(!Object.keys(state.versions).length){
-      const d=await api('/api/catalog/versions');
-      state.versions=d.versions||{};
-    }
-    renderVersions()
+    const d=await api('/api/catalog/versions?runtime='+encodeURIComponent(id));
+    state.versions[id]=d.versions?.[id]||[];
+    renderVersions();
   }catch(e){
     $('versionCount').textContent='Unavailable';
-    $('versions').innerHTML='<div class="empty"><b>Version catalog unavailable</b>'+esc(e.message)+'</div>';
+    $('versions').innerHTML='<div class="empty"><b>Version catalog unavailable</b><br>'+esc(e.message)+'<br><button class="btn primary" style="margin-top:8px" onclick="selectRuntime(\''+esc(id)+'\')">Retry</button></div>';
   }
 }
-function renderVersions(){const list=state.versions[state.runtime]||[];$('versionCount').textContent=list.length+' published versions';state.version=state.version&&list.some(v=>v.id===state.version)?state.version:(list[0]?.id||null);filterVersions()}
+function renderVersions(){
+  const list=state.versions[state.runtime]||[];
+  if(state.runtime==='mineserver'){
+    state.version='bundled';
+    $('versionSearch').value='';
+    $('versionSearch').placeholder='Native Mineserver build';
+    $('versionCount').textContent='Built-in server core';
+    $('versions').innerHTML='<button class="version selected" type="button">Mineserver native</button>';
+    return;
+  }
+  $('versionSearch').placeholder='Search Minecraft version…';
+  $('versionCount').textContent=list.length+' published versions';
+  state.version=state.version&&list.some(v=>v.id===state.version)?state.version:(list[0]?.id||null);
+  filterVersions()
+}
 function filterVersions(){const q=($('versionSearch').value||'').toLowerCase();const list=state.versions[state.runtime]||[];const out=list.filter(v=>String(v.id).toLowerCase().includes(q)).slice(0,160);$('versions').innerHTML=out.map(v=>'<button class="version '+(v.id===state.version?'selected':'')+'" onclick="chooseVersion(\''+esc(v.id)+'\')">'+esc(v.id)+(v.type&&v.type!=='release'?' · '+esc(v.type):'')+'</button>').join('')||'<div class="empty">No matching versions.</div>'}
 function chooseVersion(v){state.version=v;filterVersions()}
 async function loadServers(){try{const d=await api('/api/servers');state.servers=d.servers||[];$('serverTotal').textContent=state.servers.length+' server'+(state.servers.length===1?'':'s');renderServers();if(!state.selected&&state.servers[0])selectServer(state.servers[0].id);else if(state.selected&&!state.servers.some(s=>s.id===state.selected))state.selected=null;if(!state.selected)clearSelected()}catch(e){toast(e.message)}}

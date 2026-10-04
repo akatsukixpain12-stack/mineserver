@@ -16,8 +16,8 @@ class Settings:
     curseforge_api_key: str = os.getenv("CURSEFORGE_API_KEY", "")
     mineserver_binary_url: str = os.getenv("MINESERVER_BINARY_URL", "https://github.com/akatsukixpain12-stack/mineserver/releases/download/mineserver-nightly/mineserver-linux-x64")
     modrinth_user_agent: str = os.getenv("MODRINTH_USER_AGENT", "akatsukixpain12-stack/mineserver/1.0")
-    firestore_collection: str = os.getenv("FIRESTORE_COLLECTION", "minehub_servers")
-    local_db: str = os.getenv("LOCAL_DB", "./minehub.db")
+    firestore_collection: str = os.getenv("FIRESTORE_COLLECTION", "mineserver_servers")
+    local_db: str = os.getenv("LOCAL_DB", "./mineserver.db")
     @property
     def cors_list(self): return [x.strip() for x in self.cors_origins.split(",") if x.strip()]
 settings=Settings()
