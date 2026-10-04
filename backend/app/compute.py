@@ -70,6 +70,8 @@ def ensure_firewall():
     rule=compute_v1.Firewall(name=name,network=f"projects/{settings.project_id}/global/networks/{settings.network}",direction="INGRESS",source_ranges=["0.0.0.0/0"],target_tags=["minehub-minecraft"],allowed=[compute_v1.Allowed(protocol="tcp",ports=["25565"])])
     wait(fw.insert(project=settings.project_id,firewall_resource=rule))
 def create_vm(server,jar_url):
+    zone_map={"asia-south1":"asia-south1-a","asia-southeast1":"asia-southeast1-a","us-central1":"us-central1-a","europe-west1":"europe-west1-b"}
+    zone=server.get("zone") or zone_map.get(server.get("region"),settings.compute_zone)
     if not settings.project_id:raise RuntimeError("GOOGLE_CLOUD_PROJECT is required")
     ensure_firewall();c=compute_v1.InstancesClient()
     disk=compute_v1.AttachedDisk(boot=True,auto_delete=True,initialize_params=compute_v1.AttachedDiskInitializeParams(source_image="projects/ubuntu-os-cloud/global/images/family/ubuntu-2404-lts-amd64",disk_size_gb=settings.disk_gb,disk_type=f"projects/{settings.project_id}/zones/{settings.compute_zone}/diskTypes/pd-balanced"))
@@ -78,15 +80,17 @@ def create_vm(server,jar_url):
     ins=compute_v1.Instance(name=server["vm_name"],machine_type=f"zones/{settings.compute_zone}/machineTypes/{settings.machine_type}",disks=[disk],network_interfaces=[nic],metadata=md,tags=compute_v1.Tags(items=["minehub-minecraft"]),labels={"minehub":"true","minehub-server":server["id"][:63]})
     wait(c.insert(project=settings.project_id,zone=settings.compute_zone,instance_resource=ins))
     for _ in range(90):
-        cur=c.get(project=settings.project_id,zone=settings.compute_zone,instance=server["vm_name"])
+        cur=c.get(project=settings.project_id,zone=zone,instance=server["vm_name"])
         if cur.network_interfaces and cur.network_interfaces[0].access_configs:
             ip=cur.network_interfaces[0].access_configs[0].nat_i_p
             if ip:return {"public_ip":ip,"game_address":f"{ip}:25565"}
         time.sleep(2)
     return {"public_ip":None,"game_address":None}
-def vm_action(vm,action):
-    c=compute_v1.InstancesClient();op={"start":c.start,"stop":c.stop,"reset":c.reset}[action](project=settings.project_id,zone=settings.compute_zone,instance=vm);wait(op)
-def delete_vm(vm):
-    try:wait(compute_v1.InstancesClient().delete(project=settings.project_id,zone=settings.compute_zone,instance=vm))
+def vm_action(vm,action,zone=None):
+    zone=zone or settings.compute_zone
+    c=compute_v1.InstancesClient();op={"start":c.start,"stop":c.stop,"reset":c.reset}[action](project=settings.project_id,zone=zone,instance=vm);wait(op)
+def delete_vm(vm,zone=None):
+    zone=zone or settings.compute_zone
+    try:wait(compute_v1.InstancesClient().delete(project=settings.project_id,zone=zone,instance=vm))
     except Exception as e:
         if "not found" not in str(e).lower():raise
