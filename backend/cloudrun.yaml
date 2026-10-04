@@ -30,6 +30,8 @@ spec:
           value: https://REPLACE_AFTER_DEPLOY
         - name: CORS_ORIGINS
           value: https://REPLACE_AFTER_DEPLOY
+        - name: BACKUP_BUCKET
+          value: mineserver-PROJECT_ID-backups
         - name: ADMIN_TOKEN
           valueFrom:
             secretKeyRef:
