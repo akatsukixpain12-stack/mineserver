@@ -16,18 +16,9 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;background:rad
 </style>
 </head>
 <body>
-<div id="login" class="login">
-  <div class="login-card">
-    <div class="logo"><div class="logo-mark">M</div><span>MineHub</span></div>
-    <h1>Your Minecraft.<br>On your infrastructure.</h1>
-    <p>Real Google authentication. Real Compute Engine runtimes. Real console, files, metrics and player data.</p>
-    <div class="google"><div class="google-label">Continue with Google</div><div id="googleButton"></div></div>
-    <div id="loginError" class="login-error"></div>
-    <div class="login-note">There is no hard-coded account, fake player list or demo server. Your servers are owned by your verified Google account.</div>
-  </div>
-</div>
+<div id="login" class="login hidden"></div>
 
-<div id="app" class="app hidden">
+<div id="app" class="app">
 <aside class="side">
   <div class="logo"><div class="logo-mark">M</div><span>MineHub</span></div>
   <div class="side-title">Control plane</div>
@@ -42,7 +33,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;background:rad
   </nav>
   <div class="side-title">Workspace</div>
   <nav class="nav"><button onclick="openCreate()"><span class="ico">＋</span>Create server</button></nav>
-  <div class="side-bottom"><div class="user"><img id="avatar" class="avatar"><div style="min-width:0"><div id="uname" class="uname">—</div><div id="uemail" class="uemail">—</div></div><button class="logout" onclick="signOut()">↪</button></div></div>
+  <div class="side-bottom"><div class="workspace-live"><span class="live-dot"></span><div><b>Local workspace</b><small>Real runtime data only</small></div></div></div>
 </aside>
 
 <main class="main">
@@ -124,16 +115,15 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;background:rad
 
 <script>
 const $=id=>document.getElementById(id);
-const state={token:null,user:null,servers:[],selected:null,ws:null,currentPage:"dashboard",versions:{},runtimes:[]};
+const state={token:null,user:null,workspaceId:null,servers:[],selected:null,ws:null,currentPage:"dashboard",versions:{},runtimes:[]};
 function esc(x){return String(x??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 async function api(path,opt={}){opt.headers=Object.assign({"Content-Type":"application/json","Authorization:"Bearer "+state.token},opt.headers||{});const r=await fetch(path,opt);let d={};try{d=await r.json()}catch{}if(!r.ok)throw Error(d.detail||d.message||"Request failed");return d}
 function toast(s){$("toast").textContent=s;$("toast").classList.remove("hidden");clearTimeout(window.__toast);window.__toast=setTimeout(()=>$("toast").classList.add("hidden"),2800)}
 async function loadConfig(){const r=await fetch("/api/config");return r.json()}
-async function initGoogle(){try{for(let i=0;i<60&&!window.google;i++)await new Promise(r=>setTimeout(r,100));const c=await loadConfig();if(!c.google_client_id){$("loginError").textContent="Google OAuth is not configured on this deployment.";return}google.accounts.id.initialize({client_id:c.google_client_id,callback:onGoogle,cancel_on_tap_outside:true,auto_select:false});google.accounts.id.renderButton($("googleButton"),{theme:"outline",size:"large",shape:"pill",text:"continue_with",width:330})}catch(e){$("loginError").textContent=e.message}}
-async function onGoogle(r){$("loginError").textContent="Verifying Google account…";try{const x=await fetch("/api/auth/check",{method:"POST",headers:{Authorization:"Bearer "+r.credential}});if(!x.ok)throw Error("Google account verification failed");const d=await x.json();state.token=r.credential;state.user=d.user;sessionStorage.setItem("minehub_google_token",state.token);enter()}catch(e){$("loginError").textContent=e.message}}
-async function boot(){await initGoogle();const t=sessionStorage.getItem("minehub_google_token");if(t){try{const r=await fetch("/api/auth/check",{method:"POST",headers:{Authorization:"Bearer "+t}});if(r.ok){const d=await r.json();state.token=t;state.user=d.user;enter();return}}catch{}}$("login").classList.remove("hidden")}
-function enter(){$("login").classList.add("hidden");$("app").classList.remove("hidden");$("uname").textContent=state.user.name;$("uemail").textContent=state.user.email;$("welcome").textContent=(state.user.name||"there").split(" ")[0];if(state.user.picture)$("avatar").src=state.user.picture;loadServers();loadRuntimes()}
-function signOut(){sessionStorage.removeItem("minehub_google_token");if(state.ws)try{state.ws.close()}catch{}location.reload()}
+function makeWorkspaceId(){const k="mineserver_workspace_id";let id=localStorage.getItem(k);if(!id){id=crypto.randomUUID?crypto.randomUUID():("ws-"+Math.random().toString(36).slice(2)+Date.now());localStorage.setItem(k,id)}return id}
+async function boot(){state.workspaceId=makeWorkspaceId();state.token=state.workspaceId;try{await fetch("/api/auth/check",{method:"POST",headers:{"X-Workspace-ID":state.workspaceId}})}catch{}enter()}
+function enter(){$("login").classList.add("hidden");$("app").classList.remove("hidden");$("welcome").textContent="Minecraft";loadServers();loadRuntimes()}
+function signOut(){if(state.ws)try{state.ws.close()}catch{}localStorage.removeItem("mineserver_workspace_id");location.reload()}
 document.querySelectorAll(".nav button[data-page]").forEach(b=>b.onclick=()=>go(b.dataset.page));
 function go(p){state.currentPage=p;document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));$(p).classList.add("active");$("crumb").textContent=p==="software"?"Software & Mods":p[0].toUpperCase()+p.slice(1);if(p==="console")connectConsole();if(p==="files")loadFiles(currentPath);if(p==="players")renderPlayers();if(p==="discover")loadDiscover()}
 function openCreate(){ $("createModal").classList.add("show"); if(!state.runtimes.length)loadRuntimes(); }
@@ -152,7 +142,7 @@ function clearSelected(){$("selectedName").textContent="No server selected";$("s
 function updateSelected(s){$("selectedName").textContent=s.name;$("selectedMeta").textContent=s.software+" · Minecraft "+s.mc_version;$("selectedStatus").className="status "+(s.status==="online"?"":"offline");$("selectedStatus").innerHTML='<i class="dot"></i>'+esc(s.status||"unknown");$("address").textContent=s.game_address||"Waiting for runtime…";$("consoleTitle").textContent=s.name;$("settingName").value=s.name;$("settingVersion").value=s.mc_version;$("settingSoftware").value=s.software;$("settingVm").value=s.public_ip||"—";$("settingRegion").value=s.region||"—";$("settingMemory").value=(s.memory_mb||0)+" MB"}
 async function refreshStats(){if(!state.selected)return;try{const d=await api("/api/servers/"+state.selected+"/stats"),s=current();if(s){Object.assign(s,{status:d.status,players_online:d.players_online,players:d.players,max_players:d.max_players,metrics:d.metrics})}updateStats(d);renderServers();renderServerSelect();renderPlayers()}catch{}}
 function updateStats(d){const m=d.metrics||{},cpu=Number(m.cpu||0),ram=Number(m.ram_total_mb?m.ram_used_mb/m.ram_total_mb*100:0),disk=Number(m.disk_total_gb?m.disk_used_gb/m.disk_total_gb*100:0),pl=Number(d.max_players?d.players_online/d.max_players*100:0);$("cpu").textContent=Number.isFinite(cpu)?cpu.toFixed(0)+"%":"—";$("ram").textContent=m.ram_total_mb?(m.ram_used_mb+" / "+m.ram_total_mb+" MB"):"—";$("disk").textContent=m.disk_total_gb?(m.disk_used_gb+" / "+m.disk_total_gb+" GB"):"—";$("players").textContent=(d.players_online??"—")+" / "+(d.max_players??"—");$("rCpu").textContent=cpu.toFixed(0)+"%";$("rRam").textContent=m.ram_used_mb?m.ram_used_mb+" MB":"—";$("rDisk").textContent=m.disk_used_gb?m.disk_used_gb+" GB":"—";$("cpuBar").style.width=Math.min(100,cpu)+"%";$("ramBar").style.width=Math.min(100,ram)+"%";$("diskBar").style.width=Math.min(100,disk)+"%";$("playerBar").style.width=Math.min(100,pl)+"%";$("rCpuBar").style.width=Math.min(100,cpu)+"%";$("rRamBar").style.width=Math.min(100,ram)+"%";$("rDiskBar").style.width=Math.min(100,disk)+"%";$("capacityBar").style.width=Math.min(100,pl)+"%";$("capacityNumber").textContent=(d.players_online??0)+" / "+(d.max_players??0)}
-function connectConsole(){if(!state.selected||!state.token)return;if(state.ws)try{state.ws.close()}catch{}const proto=location.protocol==="https:"?"wss":"ws";state.ws=new WebSocket(proto+"://"+location.host+"/api/servers/"+state.selected+"/console?token="+encodeURIComponent(state.token));$("socketLabel").textContent="connecting";$("socketMini").textContent="connecting";state.ws.onopen=()=>{$("socketLabel").textContent="● live";$("socketMini").textContent="live";if($("consoleOutput").querySelector(".empty"))$("consoleOutput").innerHTML="";appendLog("Connected to MineHub runtime.","ok")};state.ws.onclose=()=>{$("socketLabel").textContent="offline";$("socketMini").textContent="offline"};state.ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==="log"){appendLog(m.line);miniLog(m.line)}else if(m.type==="metrics"){updateStats({metrics:m.data,players_online:m.data.players_online||0,players:m.data.players||[],max_players:m.data.max_players||20});const s=current();if(s){s.players=m.data.players||[];s.players_online=m.data.players_online||0;s.max_players=m.data.max_players||20;renderServers();renderPlayers()}}else if(m.type==="error")appendLog("[ERROR] "+m.message,"err");else if(m.type==="files")handleFiles(m);else if(m.type==="install")appendLog("[installer] "+m.status+" "+(m.name||""))}}
+function connectConsole(){if(!state.selected||!state.token)return;if(state.ws)try{state.ws.close()}catch{}const proto=location.protocol==="https:"?"wss":"ws";state.ws=new WebSocket(proto+"://"+location.host+"/api/servers/"+state.selected+"/console?workspace_id="+encodeURIComponent(state.workspaceId));$("socketLabel").textContent="connecting";$("socketMini").textContent="connecting";state.ws.onopen=()=>{$("socketLabel").textContent="● live";$("socketMini").textContent="live";if($("consoleOutput").querySelector(".empty"))$("consoleOutput").innerHTML="";appendLog("Connected to MineHub runtime.","ok")};state.ws.onclose=()=>{$("socketLabel").textContent="offline";$("socketMini").textContent="offline"};state.ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==="log"){appendLog(m.line);miniLog(m.line)}else if(m.type==="metrics"){updateStats({metrics:m.data,players_online:m.data.players_online||0,players:m.data.players||[],max_players:m.data.max_players||20});const s=current();if(s){s.players=m.data.players||[];s.players_online=m.data.players_online||0;s.max_players=m.data.max_players||20;renderServers();renderPlayers()}}else if(m.type==="error")appendLog("[ERROR] "+m.message,"err");else if(m.type==="files")handleFiles(m);else if(m.type==="install")appendLog("[installer] "+m.status+" "+(m.name||""))}}
 function appendLog(t,k){if($("consoleOutput").querySelector(".empty"))$("consoleOutput").innerHTML="";const d=document.createElement("div");d.className="line "+(k||"");d.innerHTML='<span class="time">['+esc(new Date().toLocaleTimeString())+']</span> '+esc(t);$("consoleOutput").appendChild(d);$("consoleOutput").scrollTop=$("consoleOutput").scrollHeight}
 function miniLog(t){if($("miniConsole").querySelector(".empty"))$("miniConsole").innerHTML="";const d=document.createElement("div");d.className="mini-line";d.textContent=t;$("miniConsole").appendChild(d);while($("miniConsole").children.length>80)$("miniConsole").firstChild.remove();$("miniConsole").scrollTop=$("miniConsole").scrollHeight}
 function clearConsole(){$("consoleOutput").innerHTML=""}
