@@ -1,4 +1,4 @@
-name: MineHub CI
+name: Mineserver CI
 on:
   push:
     branches: [main]
@@ -20,4 +20,4 @@ jobs:
         env:
           GOOGLE_CLOUD_PROJECT: ""
           GOOGLE_CLIENT_ID: ""
-        run: python -c "import sys; sys.path.insert(0,'backend'); import app.main; print('MineHub backend import OK')"
+        run: python -c "import sys; sys.path.insert(0,'backend'); import app.main; print('Mineserver backend import OK')"
