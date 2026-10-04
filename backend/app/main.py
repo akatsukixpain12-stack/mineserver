@@ -1,6 +1,6 @@
 from __future__ import annotations
 import asyncio,hmac,json,secrets,uuid
-from datetime import datetime,timezone
+from datetime import datetime,timedelta,timezone
 from pathlib import Path
 from fastapi import Depends,FastAPI,Header,HTTPException,Query,WebSocket,WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,6 +25,7 @@ app.add_middleware(
 )
 AGENTS={}
 BROWSERS={}
+SCHEDULE_TASK=None
 
 def now():
     return datetime.now(timezone.utc).isoformat()
@@ -83,6 +84,12 @@ class InstallRequest(BaseModel):
     project_id:str
     loader:str=""
     type:str="mod"
+
+class CreateSchedule(BaseModel):
+    name:str=Field(min_length=1,max_length=60)
+    action:str
+    every_minutes:int=Field(default=60,ge=1,le=10080)
+    enabled:bool=True
 
 VALID_REGIONS={
     "asia-south1":"asia-south1-a",
@@ -234,6 +241,83 @@ async def files(sid,path:str="",u=Depends(user)):
         raise HTTPException(409,"Runtime agent is offline")
     await AGENTS[sid].send_json({"type":"files_list","path":path})
     return {"queued":True,"path":path}
+
+@app.get("/api/servers/{sid}/schedules")
+async def list_schedules(sid,u=Depends(user)):
+    s=store.get_server(sid);owns(s,u)
+    return {"schedules":[{k:v for k,v in x.items() if k!="owner_id"} for x in store.list_schedules(owner_id=u["id"],server_id=sid)]}
+
+@app.post("/api/servers/{sid}/schedules")
+async def create_schedule(sid,body:CreateSchedule,u=Depends(user)):
+    s=store.get_server(sid);owns(s,u)
+    if body.action not in {"start","stop","restart","backup"}:
+        raise HTTPException(400,"Unsupported scheduled action")
+    sid2=uuid.uuid4().hex
+    next_run=datetime.now(timezone.utc)+timedelta(minutes=body.every_minutes)
+    row={
+        "id":sid2,"owner_id":u["id"],"server_id":sid,"name":body.name.strip(),
+        "action":body.action,"every_minutes":body.every_minutes,"enabled":body.enabled,
+        "next_run_at":next_run.isoformat(),"last_run_at":None,"last_error":None,
+        "created_at":now(),
+    }
+    store.put_schedule(row)
+    return {"schedule":{k:v for k,v in row.items() if k!="owner_id"}}
+
+@app.delete("/api/schedules/{schedule_id}")
+async def delete_schedule(schedule_id,u=Depends(user)):
+    row=store.get_schedule(schedule_id)
+    if not row or row.get("owner_id")!=u["id"]:
+        raise HTTPException(404,"Schedule not found")
+    store.delete_schedule(schedule_id)
+    return {"ok":True}
+
+async def run_schedule(row):
+    sid=row.get("server_id");agent=AGENTS.get(sid)
+    if not agent:
+        row["last_error"]="Runtime agent is offline"
+    else:
+        try:
+            await agent.send_json({"type":"backup" if row.get("action")=="backup" else "power","action":row.get("action")})
+            row["last_error"]=None
+            row["last_run_at"]=now()
+        except Exception as exc:
+            row["last_error"]=str(exc)
+    interval=timedelta(minutes=int(row.get("every_minutes",60)))
+    nxt=datetime.fromisoformat(row["next_run_at"])
+    current=datetime.now(timezone.utc)
+    while nxt<=current:
+        nxt+=interval
+    row["next_run_at"]=nxt.isoformat()
+    store.put_schedule(row)
+
+async def schedule_loop():
+    while True:
+        try:
+            for row in store.list_schedules():
+                if not row.get("enabled"): continue
+                try:
+                    due=datetime.fromisoformat(row["next_run_at"])<=datetime.now(timezone.utc)
+                except Exception:
+                    due=False
+                if due:
+                    await run_schedule(row)
+        except Exception:
+            pass
+        await asyncio.sleep(15)
+
+@app.on_event("startup")
+async def start_scheduler():
+    global SCHEDULE_TASK
+    SCHEDULE_TASK=asyncio.create_task(schedule_loop())
+
+@app.on_event("shutdown")
+async def stop_scheduler():
+    global SCHEDULE_TASK
+    if SCHEDULE_TASK:
+        SCHEDULE_TASK.cancel()
+        try: await SCHEDULE_TASK
+        except asyncio.CancelledError: pass
+        SCHEDULE_TASK=None
 
 @app.get("/api/catalog/runtimes")
 async def runtimes():
