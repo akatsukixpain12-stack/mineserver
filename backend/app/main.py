@@ -150,7 +150,10 @@ async def install(sid,body:InstallRequest,u=Depends(user)):
         v=await modrinth_version(body.project_id,s["mc_version"],body.loader)
         f=next((x for x in v.get("files",[]) if x.get("primary")),v.get("files",[None])[0])
         if not f: raise HTTPException(404,"No compatible download")
-        p={"url":f["url"],"name":v["name"],"target":"plugins" if body.type=="plugin" else "mods"}
+        if body.type=="modpack":
+            p={"url":f["url"],"name":v["name"],"target":"modpack","sha1":f.get("hashes",{}).get("sha1")}
+        else:
+            p={"url":f["url"],"name":v["name"],"target":"plugins" if body.type=="plugin" else "mods"}
     elif body.provider=="curseforge":
         f=await curseforge_file(int(body.project_id),s["mc_version"],body.loader)
         p={"url":f["downloadUrl"],"name":f["displayName"],"target":"mods"}
