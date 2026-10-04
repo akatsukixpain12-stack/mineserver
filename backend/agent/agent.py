@@ -28,6 +28,21 @@ def command(x):
     process.stdin.write(x.lstrip("/")+"\n");process.stdin.flush()
 def backup():
     b=ROOT/"backups";b.mkdir(exist_ok=True);name="backup-"+time.strftime("%Y%m%d-%H%M%S");return shutil.make_archive(str(b/name),"zip",root_dir=SERVER)
+def download_zip_pack(url):
+    tmp=ROOT/"serverpack.tmp.zip"
+    req=urllib.request.Request(url,headers={"User-Agent":"MineHub-Agent/2.0"})
+    with urllib.request.urlopen(req,timeout=180) as r,open(tmp,"wb") as f: shutil.copyfileobj(r,f)
+    if not zipfile.is_zipfile(tmp): raise ValueError("Server pack is not a valid ZIP")
+    with zipfile.ZipFile(tmp) as z:
+        for info in z.infolist():
+            rel=info.filename.replace("\\","/")
+            if rel.endswith("/") or rel.startswith("/") or ".." in Path(rel).parts: continue
+            dest=safe(rel)
+            dest.parent.mkdir(parents=True,exist_ok=True)
+            with z.open(info) as src,open(dest,"wb") as dst: shutil.copyfileobj(src,dst)
+    tmp.unlink(missing_ok=True)
+    return "server pack"
+
 def download_modpack(url):
     tmp=ROOT/"modpack.tmp.mrpack"
     req=urllib.request.Request(url,headers={"User-Agent":"MineHub-Agent/2.0"})
@@ -143,7 +158,9 @@ async def handle(ws,m):
         if was:stop()
         try:
             await send(ws,{"type":"install","status":"backup","name":m.get("name")});await asyncio.to_thread(backup)
-            await send(ws,{"type":"install","status":"download","name":m.get("name")});if m.get("target")=="modpack":
+            await send(ws,{"type":"install","status":"download","name":m.get("name")});if m.get("target")=="modpack-zip":
+                p=await asyncio.to_thread(download_zip_pack,m["url"])
+            elif m.get("target")=="modpack":
                 p=await asyncio.to_thread(download_modpack,m["url"])
             else:
                 p=await asyncio.to_thread(download,m["url"],m.get("target","mods"))
