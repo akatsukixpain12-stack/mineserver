@@ -1,6 +1,7 @@
 from __future__ import annotations
 import asyncio,hmac,json,secrets,uuid
 from datetime import datetime,timezone
+from pathlib import Path
 from fastapi import Depends,FastAPI,Header,HTTPException,Query,WebSocket,WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -15,7 +16,9 @@ app=FastAPI(title=settings.app_name,version="2.0.0")
 app.add_middleware(CORSMiddleware,allow_origins=settings.cors_list or ["*"],allow_credentials=True,allow_methods=["*"],allow_headers=["*"])
 AGENTS={};BROWSERS={}
 
+
 def now(): return datetime.now(timezone.utc).isoformat()
+
 
 def workspace(authorization: str|None=Header(default=None), x_workspace_id: str|None=Header(default=None)):
     # Passwordless anonymous workspace. The browser generates a random workspace ID;
@@ -25,10 +28,13 @@ def workspace(authorization: str|None=Header(default=None), x_workspace_id: str|
         wid="default"
     return {"id":wid,"name":""}
 
+
 def user(u=Depends(workspace)): return u
+
 
 def owns(s,user):
     if not s or s.get("owner_id")!=user["id"]: raise HTTPException(404,"Server not found")
+
 
 class CreateServer(BaseModel):
     name:str=Field(min_length=1,max_length=50)
@@ -38,21 +44,26 @@ class CreateServer(BaseModel):
     memory_mb:int=Field(default=2048,ge=1024,le=8192)
     public:bool=False
 
+
 class InstallRequest(BaseModel):
     provider:str
     project_id:str
     loader:str="fabric"
     type:str="mod"
 
+
 @app.get("/healthz")
 async def healthz(): return {"ok":True,"persistent_store":store.persistent,"time":now()}
+
 
 @app.get("/api/config")
 async def public_config():
     return {"app_name":settings.app_name,"auth":"anonymous-workspace"}
 
+
 @app.post("/api/auth/check")
 async def auth_check(u=Depends(user)): return {"ok":True,"user":u}
+
 
 @app.get("/api/servers")
 async def servers(u=Depends(user)):
@@ -61,17 +72,19 @@ async def servers(u=Depends(user)):
         items.append({k:v for k,v in s.items() if k!="agent_token"})
     return {"servers":items,"user":u}
 
+
 @app.get("/api/public/servers")
 async def public_servers():
     fields={"agent_token","owner_id"}
     return {"servers":[{k:v for k,v in s.items() if k not in fields} for s in store.list_servers(public_only=True)]}
+
 
 @app.post("/api/servers")
 async def create(body:CreateServer,u=Depends(user)):
     sw=body.software.lower()
     if sw not in {x["id"] for x in RUNTIMES}: raise HTTPException(400,"Unsupported Minecraft runtime")
     sid=uuid.uuid4().hex
-    s={"id":sid,"owner_id":u["id"],"name":body.name,"region":body.region,"zone":{"asia-south1":"asia-south1-a","asia-southeast1":"asia-southeast1-a","us-central1":"us-central1-a","europe-west1":"europe-west1-b"}.get(body.region,settings.compute_zone),"software":sw,"mc_version":body.mc_version,"memory_mb":body.memory_mb,"public":body.public,"status":"provisioning","vm_name":f"minehub-{sid[:12]}","agent_token":secrets.token_urlsafe(32),"created_at":now(),"players_online":0,"players":[],"max_players":20,"metrics":{},"game_address":None}
+    s={"id":sid,"owner_id":u["id"],"name":body.name,"region":body.region,"zone":{"asia-south1":"asia-south1-a","asia-southeast1":"asia-southeast1-a","us-central1":"us-central1-a","europe-west1":"europe-west1-b"}[body.region],"software":sw,"mc_version":body.mc_version,"memory_mb":body.memory_mb,"public":body.public,"status":"creating","agent_token":secrets.token_urlsafe(24),"vm_name":"","created_at":now()}
     store.put_server(s)
     try:
         jar=await resolve_jar_url(sw,body.mc_version)
@@ -82,10 +95,12 @@ async def create(body:CreateServer,u=Depends(user)):
         store.update_server(sid,status="error",error=str(e))
         raise HTTPException(502,f"VM provisioning failed: {e}")
 
+
 @app.get("/api/servers/{sid}")
 async def get_server(sid,u=Depends(user)):
     s=store.get_server(sid);owns(s,u)
     return {"server":{k:v for k,v in s.items() if k!="agent_token"}}
+
 
 @app.post("/api/servers/{sid}/power/{action}")
 async def power(sid,action,u=Depends(user)):
@@ -99,16 +114,19 @@ async def power(sid,action,u=Depends(user)):
     store.update_server(sid,status={"start":"starting","stop":"stopping","restart":"restarting"}[action])
     return {"ok":True,"action":action}
 
+
 @app.delete("/api/servers/{sid}")
 async def remove(sid,u=Depends(user)):
     s=store.get_server(sid);owns(s,u)
     await asyncio.to_thread(delete_vm,s["vm_name"],s.get("zone"));store.delete_server(sid)
     return {"ok":True}
 
+
 @app.get("/api/servers/{sid}/stats")
 async def stats(sid,u=Depends(user)):
     s=store.get_server(sid);owns(s,u)
     return {"metrics":s.get("metrics",{}),"players_online":s.get("players_online",0),"players":s.get("players",[]),"max_players":s.get("max_players",20),"status":s.get("status")}
+
 
 @app.get("/api/servers/{sid}/files")
 async def files(sid,path:str="",u=Depends(user)):
@@ -118,9 +136,11 @@ async def files(sid,path:str="",u=Depends(user)):
     await a.send_json({"type":"files_list","path":path})
     return {"queued":True,"path":path}
 
+
 @app.get("/api/catalog/runtimes")
 async def runtimes():
     return {"runtimes":RUNTIMES}
+
 
 @app.get("/api/catalog/versions")
 async def versions():
@@ -129,11 +149,13 @@ async def versions():
     except Exception as e:
         raise HTTPException(502,f"Version catalog unavailable: {e}")
 
+
 @app.get("/api/catalog/search")
 async def catalog(q:str=Query(""),provider:str="modrinth",mc:str="1.21.10",loader:str="fabric",type:str="mod",u=Depends(user)):
     if provider=="modrinth": return {"items":await modrinth_search(q,mc,loader,type)}
     if provider=="curseforge": return {"items":await curseforge_search(q,mc,loader,type)}
     raise HTTPException(400,"Invalid provider")
+
 
 @app.post("/api/servers/{sid}/install")
 async def install(sid,body:InstallRequest,u=Depends(user)):
@@ -154,6 +176,7 @@ async def install(sid,body:InstallRequest,u=Depends(user)):
     if not a: raise HTTPException(409,"Runtime agent is offline")
     await a.send_json({"type":"install",**p})
     return {"ok":True,"queued":p["name"]}
+
 
 @app.websocket("/agent/ws")
 async def agent(ws:WebSocket,server_id:str,token:str):
@@ -180,6 +203,7 @@ async def agent(ws:WebSocket,server_id:str,token:str):
         try: store.update_server(server_id,status="offline")
         except Exception: pass
 
+
 @app.websocket("/api/servers/{sid}/console")
 async def console(ws:WebSocket,sid:str,workspace_id:str="default"):
     s=store.get_server(sid)
@@ -194,6 +218,7 @@ async def console(ws:WebSocket,sid:str,workspace_id:str="default"):
     except WebSocketDisconnect: pass
     finally: BROWSERS.get(sid,set()).discard(ws)
 
+
 async def broadcast(sid,payload):
     dead=[]
     for ws in BROWSERS.get(sid,set()):
@@ -201,5 +226,14 @@ async def broadcast(sid,payload):
         except Exception: dead.append(ws)
     for ws in dead: BROWSERS.get(sid,set()).discard(ws)
 
-# Serve the same production UI from Cloud Run. API and frontend therefore share one origin.
-app.mount("/", StaticFiles(directory="/app/web", html=True), name="web")
+
+# Serve the same production UI from Cloud Run when a frontend build exists.
+# In CI we only import the backend, so this must be optional.
+for candidate in (
+    Path("/app/web"),
+    Path(__file__).resolve().parents[2] / "web",
+    Path.cwd() / "web",
+):
+    if candidate.is_dir():
+        app.mount("/", StaticFiles(directory=str(candidate), html=True), name="web")
+        break
