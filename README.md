@@ -81,3 +81,43 @@ The installer should:
 ## Development
 
 This repository currently contains a static frontend prototype. Replace the demo functions in `index.html` with calls to the production API described above.
+
+## Architecture direction — Pumpkin-inspired, web-based
+
+MineHub is intentionally **not a copy of Pumpkin's UI or source**. Pumpkin is a native Rust Minecraft server focused on performance, protocol/game implementation, and a small runtime footprint. MineHub uses that same "real runtime, no fake dashboard" philosophy but exposes it through a web control plane.
+
+### Version strategy
+
+The control plane now discovers versions dynamically instead of hard-coding a handful of versions:
+
+- **Vanilla:** Mojang's version manifest.
+- **Paper / Folia / Purpur:** PaperMC project/build APIs.
+- **Fabric:** Fabric Meta API.
+- **Quilt:** Quilt Meta API.
+- **Forge / NeoForge:** Maven metadata.
+- The create-server UI displays the full discovered list for the selected runtime, so the catalog can grow with Minecraft releases without another frontend edit.
+
+The important distinction is that a version appearing in the catalog is not a claim that every third-party runtime supports every historical Minecraft release. The backend asks the upstream runtime for the exact build before provisioning.
+
+### No fake state
+
+The production UI does not manufacture:
+
+- player usernames
+- online counts
+- CPU/RAM/disk numbers
+- server cards
+- public server addresses
+- console lines
+
+Those values come from Google Compute Engine + the MineHub agent + the persistent server store. If there is no runtime, the UI shows an empty state.
+
+### Modpacks
+
+Modrinth .mrpack installs are handled server-side: the agent reads modrinth.index.json, skips files marked server-unsupported, downloads referenced files, verifies the supplied hashes, and applies overrides and server-overrides.
+
+### Runtime architecture
+
+**Browser → Cloud Run/FastAPI → Compute Engine Minecraft VM**
+
+Cloud Run is the web/control layer; Minecraft itself runs on Compute Engine because a normal Cloud Run service is not a raw Minecraft TCP server. The control plane handles Google authentication, server provisioning, live WebSocket console traffic, provider APIs, metrics, files and the public directory.
