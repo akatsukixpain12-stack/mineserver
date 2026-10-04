@@ -20,7 +20,7 @@ Do **not** run the actual Minecraft Java server as a normal Cloud Run service an
 Recommended Google Cloud architecture:
 
 1. **Cloud Run — control plane**
-   - passwordless workspace/session API
+   - Google Identity Services login with backend ID-token verification
    - server create/start/stop/restart API
    - Modrinth/CurseForge proxy
    - console WebSocket gateway
@@ -126,12 +126,12 @@ Modrinth .mrpack installs are handled server-side: the agent reads modrinth.inde
 
 **Browser → Cloud Run/FastAPI → Compute Engine Minecraft VM**
 
-Cloud Run is the web/control layer; Minecraft itself runs on Compute Engine because a normal Cloud Run service is not a raw Minecraft TCP server. The control plane uses a browser-generated anonymous workspace ID instead of a forced login, then handles server provisioning, live WebSocket console traffic, provider APIs, metrics, files and the public directory.
+Cloud Run is the web/control layer; Minecraft itself runs on Compute Engine because a normal Cloud Run service is not a raw Minecraft TCP server. The control plane authenticates users with Google Identity Services, stores servers against the verified Google account subject, and handles server provisioning, live WebSocket console traffic, provider APIs, metrics, files and the public directory.
 
 
 ## Current runtime integration
 
-- **No pre-login:** the dashboard opens directly and creates a random local workspace ID in the browser. There is no fake account, fake avatar, fake email, or fake player list.
+- **Google account storage:** the dashboard requires Google sign-in and restores the servers belonging to that account. There is no fake account, fake avatar, fake email, or fake player list.
 - **Real runtime:** Minecraft processes run on the provisioned Compute Engine VM, not inside the browser or as fake UI state.
 - **Pumpkin:** the repository contains `vendor/Pumpkin` as a Git submodule pinned to the upstream Pumpkin source commit. The panel also exposes Pumpkin as a native runtime and downloads the matching official Linux release at provisioning time.
 - Pumpkin is GPL-3.0 licensed; keep the upstream license/attribution when distributing the submodule or derivative work.
