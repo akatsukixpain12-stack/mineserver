@@ -18,7 +18,7 @@ async def modrinth_version(pid,mc,loader):
     return next((x for x in data if x.get("files")),data[0])
 async def curseforge_search(query,mc,loader,project_type):
     if not settings.curseforge_api_key:raise HTTPException(503,"CURSEFORGE_API_KEY is not configured")
-    lm={"forge":1,"fabric":4,"quilt":5,"neoforge":6};p={"gameId":432,"classId":4471 if project_type=="modpack" else 6,"searchFilter":query,"gameVersion":mc,"pageSize":30}
+    lm={"forge":1,"fabric":4,"quilt":5,"neoforge":6};p={"gameId":432,"classId":4471 if project_type=="modpack" else (5 if project_type=="plugin" else 6),"searchFilter":query,"gameVersion":mc,"pageSize":30}
     if loader in lm:p["modLoaderType"]=lm[loader]
     h={"Accept":"application/json","x-api-key":settings.curseforge_api_key}
     async with httpx.AsyncClient(timeout=20) as c:r=await c.get(f"{CURSEFORGE}/mods/search",params=p,headers=h)
