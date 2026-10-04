@@ -15,7 +15,8 @@ def launch():
     cmd=[JAVA_BIN,f"-Xms{max(512,MEM//2)}M",f"-Xmx{MEM}M"]
     if RUNTIME in {"forge","neoforge"} and (SERVER/"run.sh").exists(): cmd=["bash","run.sh"]
     else: cmd += ["-jar","server.jar","nogui"]
-    process=subprocess.Popen(cmd,cwd=SERVER,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,bufsize=1)
+    env=os.environ.copy();env["JAVA_HOME"]=str(Path(JAVA_BIN).parent.parent);env["PATH"]=str(Path(JAVA_BIN).parent)+":"+env.get("PATH","")
+    process=subprocess.Popen(cmd,cwd=SERVER,env=env,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,bufsize=1)
 def stop():
     global process
     if not process or process.poll() is not None:return
