@@ -33,7 +33,7 @@ def startup_script(server:dict[str,Any],jar_url):
 set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -y
-apt-get install -y openjdk-21-jre-headless python3 python3-pip curl ca-certificates
+apt-get install -y openjdk-21-jre-headless python3 python3-pip curl ca-certificates\npython3 -m pip install --break-system-packages --no-cache-dir psutil==7.0.0 websockets==15.0.1
 mkdir -p /opt/minehub/server /opt/minehub
 printf '%s' '{a}' | base64 -d > /opt/minehub/agent.py
 printf '%s' '{meta}' | base64 -d > /opt/minehub/config.json
