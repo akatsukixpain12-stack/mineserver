@@ -4,8 +4,6 @@ from datetime import datetime,timezone
 from fastapi import Depends,FastAPI,Header,HTTPException,Query,WebSocket,WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
 from pydantic import BaseModel,Field
 from .compute import create_vm,delete_vm,resolve_jar_url,vm_action
 from .runtime import RUNTIMES,catalog as runtime_catalog
@@ -19,21 +17,15 @@ AGENTS={};BROWSERS={}
 
 def now(): return datetime.now(timezone.utc).isoformat()
 
-def google_user(authorization: str|None):
-    if not authorization or not authorization.lower().startswith("bearer "):
-        raise HTTPException(401,"Sign in with Google first")
-    token=authorization[7:].strip()
-    try:
-        claims=id_token.verify_oauth2_token(token,google_requests.Request(),audience=settings.google_client_id)
-    except Exception as e:
-        raise HTTPException(401,"Invalid Google sign-in token") from e
-    if claims.get("iss") not in {"accounts.google.com","https://accounts.google.com"}:
-        raise HTTPException(401,"Invalid Google token issuer")
-    if not claims.get("sub") or not claims.get("email"):
-        raise HTTPException(401,"Google account information is incomplete")
-    return {"id":claims["sub"],"email":claims["email"],"name":claims.get("name") or claims["email"].split("@")[0],"picture":claims.get("picture","")}
+def workspace(authorization: str|None=Header(default=None), x_workspace_id: str|None=Header(default=None)):
+    # Passwordless anonymous workspace. The browser generates a random workspace ID;
+    # there is no Google account, fake profile, or pre-login screen.
+    wid=(x_workspace_id or "").strip()
+    if not wid or len(wid)>128:
+        wid="default"
+    return {"id":wid,"name":""}
 
-def user(authorization: str|None=Header(default=None)): return google_user(authorization)
+def user(u=Depends(workspace)): return u
 
 def owns(s,user):
     if not s or s.get("owner_id")!=user["id"]: raise HTTPException(404,"Server not found")
@@ -57,7 +49,7 @@ async def healthz(): return {"ok":True,"persistent_store":store.persistent,"time
 
 @app.get("/api/config")
 async def public_config():
-    return {"google_client_id":settings.google_client_id,"app_name":settings.app_name}
+    return {"app_name":settings.app_name,"auth":"anonymous-workspace"}
 
 @app.post("/api/auth/check")
 async def auth_check(u=Depends(user)): return {"ok":True,"user":u}
@@ -79,7 +71,7 @@ async def create(body:CreateServer,u=Depends(user)):
     sw=body.software.lower()
     if sw not in {x["id"] for x in RUNTIMES}: raise HTTPException(400,"Unsupported Minecraft runtime")
     sid=uuid.uuid4().hex
-    s={"id":sid,"owner_id":u["id"],"owner_email":u["email"],"owner_name":u["name"],"name":body.name,"region":body.region,"zone":{"asia-south1":"asia-south1-a","asia-southeast1":"asia-southeast1-a","us-central1":"us-central1-a","europe-west1":"europe-west1-b"}.get(body.region,settings.compute_zone),"software":sw,"mc_version":body.mc_version,"memory_mb":body.memory_mb,"public":body.public,"status":"provisioning","vm_name":f"minehub-{sid[:12]}","agent_token":secrets.token_urlsafe(32),"created_at":now(),"players_online":0,"players":[],"max_players":20,"metrics":{},"game_address":None}
+    s={"id":sid,"owner_id":u["id"],"name":body.name,"region":body.region,"zone":{"asia-south1":"asia-south1-a","asia-southeast1":"asia-southeast1-a","us-central1":"us-central1-a","europe-west1":"europe-west1-b"}.get(body.region,settings.compute_zone),"software":sw,"mc_version":body.mc_version,"memory_mb":body.memory_mb,"public":body.public,"status":"provisioning","vm_name":f"minehub-{sid[:12]}","agent_token":secrets.token_urlsafe(32),"created_at":now(),"players_online":0,"players":[],"max_players":20,"metrics":{},"game_address":None}
     store.put_server(s)
     try:
         jar=await resolve_jar_url(sw,body.mc_version)
