@@ -37,10 +37,13 @@ def startup_script(server:dict[str,Any],jar_url):
 set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -y
-apt-get install -y openjdk-21-jre-headless python3 python3-pip curl ca-certificates\npython3 -m pip install --break-system-packages --no-cache-dir psutil==7.0.0 websockets==15.0.1
+apt-get install -y openjdk-8-jre-headless openjdk-17-jre-headless openjdk-21-jre-headless openjdk-25-jre-headless python3 python3-pip curl ca-certificates\npython3 -m pip install --break-system-packages --no-cache-dir psutil==7.0.0 websockets==15.0.1
 mkdir -p /opt/minehub/server /opt/minehub
 printf '%s' '{a}' | base64 -d > /opt/minehub/agent.py
 printf '%s' '{meta}' | base64 -d > /opt/minehub/config.json
+JAVA_MAJOR=$(python3 -c 'import json; print(json.load(open("/opt/minehub/config.json"))["java_major"])')
+export JAVA_HOME="/usr/lib/jvm/java-$JAVA_MAJOR-openjdk-amd64"
+export PATH="$JAVA_HOME/bin:$PATH"
 cd /opt/minehub/server
 if [ ! -f server.jar ] && [ ! -f installer.jar ]; then curl -fL --retry 5 -A '{UA}' -o server.jar '{jar_url}'; fi
 if [ "{server.get("software","vanilla")}" = "forge" ] || [ "{server.get("software","vanilla")}" = "neoforge" ]; then
