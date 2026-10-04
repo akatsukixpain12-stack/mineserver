@@ -24,7 +24,7 @@ members = [
     "crates/pumpkin-wasm-host-v0_2",
     "crates/pumpkin-world",
     "tools/pumpkin-codegen",
-undefined]
+]
 
 # [workspace.lints.rust]
 # missing_docs = "warn"
