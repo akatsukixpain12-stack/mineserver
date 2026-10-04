@@ -1,5 +1,5 @@
 from __future__ import annotations
-import asyncio,json,re,shutil,time,urllib.request
+import asyncio,json,re,shutil,time,urllib.request,subprocess
 from pathlib import Path
 import psutil,websockets
 ROOT=Path("/opt/minehub");SERVER=ROOT/"server";C=json.loads((ROOT/"config.json").read_text());BASE=C["control_url"].rstrip("/").replace("https://","wss://").replace("http://","ws://");URL=f"{BASE}/agent/ws?server_id={C['server_id']}&token={C['agent_token']}";MEM=int(C.get("memory_mb",2048));process=None;lock=asyncio.Lock();players=set()
