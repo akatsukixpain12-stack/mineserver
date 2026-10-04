@@ -181,12 +181,9 @@ async def agent(ws:WebSocket,server_id:str,token:str):
         except Exception: pass
 
 @app.websocket("/api/servers/{sid}/console")
-async def console(ws:WebSocket,sid:str,token:str):
+async def console(ws:WebSocket,sid:str,workspace_id:str="default"):
     s=store.get_server(sid)
-    try: u=google_user("Bearer "+token)
-    except HTTPException:
-        await ws.close(code=4401);return
-    if not s or s.get("owner_id")!=u["id"]:
+    if not s or s.get("owner_id")!=workspace_id:
         await ws.close(code=4404);return
     await ws.accept();BROWSERS.setdefault(sid,set()).add(ws)
     try:
