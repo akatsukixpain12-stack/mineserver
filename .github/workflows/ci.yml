@@ -26,6 +26,26 @@ jobs:
           GOOGLE_CLOUD_PROJECT: ""
           GOOGLE_CLIENT_ID: ""
         run: python -c "import sys;sys.path.insert(0,'backend');import app.main;print('Mineserver backend import OK')"
+      - name: Smoke test same-origin FastAPI endpoints
+        env:
+          GOOGLE_CLOUD_PROJECT: ""
+          GOOGLE_CLIENT_ID: ""
+        run: |
+          python - <<'PY'
+          import sys
+          sys.path.insert(0,"backend")
+          from fastapi.testclient import TestClient
+          from app.main import app
+          client=TestClient(app)
+          assert client.get("/healthz").status_code == 200
+          cfg=client.get("/api/config")
+          assert cfg.status_code == 200
+          assert cfg.json()["same_origin"] is True
+          routes={getattr(r,"path","") for r in app.routes}
+          required={"/api/config","/api/auth/check","/api/servers","/api/catalog/runtimes","/api/catalog/versions","/agent/ws"}
+          assert required <= routes
+          print("Mineserver same-origin API smoke test OK")
+          PY
       - name: Check frontend JavaScript
         run: |
           python - <<'PY'
