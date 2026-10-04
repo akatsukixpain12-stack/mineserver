@@ -158,7 +158,8 @@ async def handle(ws,m):
         if was:stop()
         try:
             await send(ws,{"type":"install","status":"backup","name":m.get("name")});await asyncio.to_thread(backup)
-            await send(ws,{"type":"install","status":"download","name":m.get("name")});if m.get("target")=="modpack-zip":
+            await send(ws,{"type":"install","status":"download","name":m.get("name")})
+            if m.get("target")=="modpack-zip":
                 p=await asyncio.to_thread(download_zip_pack,m["url"])
             elif m.get("target")=="modpack":
                 p=await asyncio.to_thread(download_modpack,m["url"])
