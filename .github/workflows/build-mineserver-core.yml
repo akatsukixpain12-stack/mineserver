@@ -17,10 +17,14 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-      - name: Verify required native workspace
+      - name: Verify headless Mineserver workspace
         run: |
           set -euxo pipefail
-          test -f server/crates/pumpkin-gametest/Cargo.toml
+          test -f server/Cargo.toml
+          test -f server/crates/mineserver/Cargo.toml
+      - name: Cargo check
+        working-directory: server
+        run: cargo check -p mineserver
       - name: Build headless Mineserver binary
         working-directory: server
         run: cargo build --release -p mineserver
