@@ -21,6 +21,7 @@ def startup_script(server:dict[str,Any],binary_or_jar_url):
         "server_id":server["id"],
         "agent_token":server["agent_token"],
         "control_url":settings.control_url,
+        "backup_bucket":settings.backup_bucket,
         "jar_url":binary_or_jar_url,
         "memory_mb":server.get("memory_mb",2048),
         "runtime":server.get("software","vanilla"),
@@ -55,7 +56,7 @@ set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -y
 apt-get install -y openjdk-8-jre-headless openjdk-17-jre-headless openjdk-21-jre-headless openjdk-25-jre-headless python3 python3-pip curl ca-certificates
-python3 -m pip install --break-system-packages --no-cache-dir psutil==7.0.0 websockets==15.0.1
+python3 -m pip install --break-system-packages --no-cache-dir psutil==7.0.0 websockets==15.0.1 google-cloud-storage==2.19.0
 mkdir -p /opt/mineserver/server
 printf '%s' '{agent_b64}' | base64 -d > /opt/mineserver/agent.py
 printf '%s' '{meta}' | base64 -d > /opt/mineserver/config.json
