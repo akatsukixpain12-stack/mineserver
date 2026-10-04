@@ -2,7 +2,7 @@ from __future__ import annotations
 import asyncio,json,re,shutil,time,urllib.request,subprocess,zipfile,hashlib,tempfile,os
 from pathlib import Path
 import psutil,websockets
-ROOT=Path("/opt/minehub");SERVER=ROOT/"server";C=json.loads((ROOT/"config.json").read_text());BASE=C["control_url"].rstrip("/").replace("https://","wss://").replace("http://","ws://");URL=f"{BASE}/agent";process=None;players=set();lock=asyncio.Lock();MEM=int((psutil.virtual_memory().total//1048576)*.75);RUNTIME=(ROOT/"runtime.txt").read_text().strip() if (ROOT/"runtime.txt").exists() else "vanilla";JAVA_BIN=shutil.which("java") or "/usr/bin/java"
+ROOT=Path("/opt/minehub");SERVER=ROOT/"server";C=json.loads((ROOT/"config.json").read_text());BASE=C["control_url"].rstrip("/").replace("https://","wss://").replace("http://","ws://");URL=f"{BASE}/agent";process=None;players=set();max_players=20;lock=asyncio.Lock();MEM=int(C.get("memory_mb") or ((psutil.virtual_memory().total//1048576)*.75));RUNTIME=str(C.get("runtime") or "vanilla").lower();JAVA_BIN=shutil.which("java") or "/usr/bin/java"
 def safe(rel):
     p=(SERVER/rel.strip().replace("\\","/")).resolve()
     if p!=SERVER and SERVER not in p.parents:raise ValueError("Invalid path")
@@ -12,9 +12,13 @@ async def send(ws,x):
 def launch():
     global process
     if process and process.poll() is None:return
-    cmd=[JAVA_BIN,f"-Xms{max(512,MEM//2)}M",f"-Xmx{MEM}M"]
-    if RUNTIME in {"forge","neoforge"} and (SERVER/"run.sh").exists(): cmd=["bash","run.sh"]
-    else: cmd += ["-jar","server.jar","nogui"]
+    if RUNTIME in {"forge","neoforge"} and (SERVER/"run.sh").exists():
+        cmd=["bash","run.sh"]
+    else:
+        jar=SERVER/"server.jar"
+        if not jar.exists():
+            raise RuntimeError(f"server.jar is missing for runtime {RUNTIME}")
+        cmd=[JAVA_BIN,f"-Xms{max(512,MEM//2)}M",f"-Xmx{MEM}M","-jar",str(jar),"nogui"]
     env=os.environ.copy();env["JAVA_HOME"]=str(Path(JAVA_BIN).parent.parent);env["PATH"]=str(Path(JAVA_BIN).parent)+":"+env.get("PATH","")
     process=subprocess.Popen(cmd,cwd=SERVER,env=env,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,bufsize=1)
 def stop():
@@ -101,12 +105,18 @@ def parse_list(line):
     return None
 
 def metrics():
-    m=psutil.virtual_memory();d=psutil.disk_usage(str(SERVER));return {"cpu":psutil.cpu_percent(),"ram_used_mb":round(m.used/1048576),"ram_total_mb":round(m.total/1048576),"disk_used_gb":round(d.used/1073741824),"disk_total_gb":round(d.total/1073741824),"players":len(players)}
+    m=psutil.virtual_memory();d=psutil.disk_usage(str(SERVER))
+    running=bool(process and process.poll() is None)
+    return {"cpu":psutil.cpu_percent(),"ram_used_mb":round(m.used/1048576),"ram_total_mb":round(m.total/1048576),"disk_used_gb":round(d.used/1073741824),"disk_total_gb":round(d.total/1073741824),"players":len(players),"players_online":len(players),"max_players":max_players,"minecraft_running":running}
 async def output(ws):
     while True:
         if process and process.stdout:
             line=await asyncio.to_thread(process.stdout.readline)
-            if line:parse_player(line);await send(ws,{"type":"log","line":line.rstrip(),"players_online":len(players)})
+            if line:
+                parse_player(line)
+                parsed=parse_list(line)
+                if parsed: players_count,max_count=parsed; globals()["max_players"]=max_count
+                await send(ws,{"type":"log","line":line.rstrip(),"players_online":len(players)})
             else:await asyncio.sleep(.1)
         else:await asyncio.sleep(.5)
 async def metrics_loop(ws):
