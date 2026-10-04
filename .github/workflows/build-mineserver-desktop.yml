@@ -2,6 +2,11 @@ name: Build Mineserver desktop apps
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - "desktop-app/**"
+      - "server/**"
+      - ".github/workflows/build-mineserver-desktop.yml"
 
 permissions:
   contents: read
