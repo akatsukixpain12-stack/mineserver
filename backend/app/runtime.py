@@ -15,8 +15,7 @@ RUNTIMES=[
  {"id":"quilt","name":"Quilt","kind":"server","family":"modded","loaders":["quilt"],"description":"Modern Fabric-compatible mod loader"},
  {"id":"forge","name":"Forge","kind":"server","family":"modded","loaders":["forge"],"description":"Classic Minecraft mod loader"},
  {"id":"neoforge","name":"NeoForge","kind":"server","family":"modded","loaders":["neoforge"],"description":"Modern Forge-family mod loader"},
- {"id":"sponge","name":"Sponge","kind":"server","family":"plugins","loaders":["sponge"],"description":"Plugin API and server ecosystem"},
-]
+ ]
 
 async def get_json(client,url,params=None):
     r=await client.get(url,params=params,headers={"User-Agent":UA})
