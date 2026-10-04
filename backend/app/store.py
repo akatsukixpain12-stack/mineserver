@@ -91,7 +91,50 @@ class Store:
         self.put_server(x)
         return x
 
+    def put_schedule(self,data:dict[str,Any]):
+        data=dict(data);data["updated_at"]=utcnow()
+        if self._firestore:
+            self._firestore.collection("mineserver_schedules").document(data["id"]).set(data,merge=True)
+            return
+        with self._lock:
+            self._db.execute(
+                "CREATE TABLE IF NOT EXISTS schedules (id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, server_id TEXT NOT NULL, data TEXT NOT NULL, updated_at TEXT NOT NULL)"
+            )
+            self._db.execute(
+                "INSERT INTO schedules(id,owner_id,server_id,data,updated_at) VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data,updated_at=excluded.updated_at",
+                (data["id"],data["owner_id"],data["server_id"],json.dumps(data),data["updated_at"]),
+            )
+            self._db.commit()
+
+    def get_schedule(self,sid):
+        if self._firestore:
+            x=self._firestore.collection("mineserver_schedules").document(sid).get()
+            return x.to_dict() if x.exists else None
+        self._db.execute("CREATE TABLE IF NOT EXISTS schedules (id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, server_id TEXT NOT NULL, data TEXT NOT NULL, updated_at TEXT NOT NULL)")
+        x=self._db.execute("SELECT data FROM schedules WHERE id=?",(sid,)).fetchone()
+        return json.loads(x["data"]) if x else None
+
+    def list_schedules(self,owner_id=None,server_id=None):
+        if self._firestore:
+            q=self._firestore.collection("mineserver_schedules")
+            rows=[x.to_dict() for x in q.stream()]
+            return [x for x in rows if (not owner_id or x.get("owner_id")==owner_id) and (not server_id or x.get("server_id")==server_id)]
+        self._db.execute("CREATE TABLE IF NOT EXISTS schedules (id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, server_id TEXT NOT NULL, data TEXT NOT NULL, updated_at TEXT NOT NULL)")
+        clauses=[];params=[]
+        if owner_id:clauses.append("owner_id=?");params.append(owner_id)
+        if server_id:clauses.append("server_id=?");params.append(server_id)
+        sql="SELECT data FROM schedules"+((" WHERE "+" AND ".join(clauses)) if clauses else "")
+        return [json.loads(x["data"]) for x in self._db.execute(sql,params).fetchall()]
+
+    def delete_schedule(self,sid):
+        if self._firestore:
+            self._firestore.collection("mineserver_schedules").document(sid).delete()
+            return
+        self._db.execute("CREATE TABLE IF NOT EXISTS schedules (id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, server_id TEXT NOT NULL, data TEXT NOT NULL, updated_at TEXT NOT NULL)")
+        with self._lock:self._db.execute("DELETE FROM schedules WHERE id=?",(sid,));self._db.commit()
+
     def delete_server(self,sid):
+
         if self._firestore:
             self._firestore.collection(settings.firestore_collection).document(sid).delete()
             return
