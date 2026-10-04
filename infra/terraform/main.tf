@@ -44,3 +44,45 @@ resource "google_compute_firewall" "minecraft" {
 }
 output "control_service_account" { value=google_service_account.control.email }
 output "artifact_repository" { value=google_artifact_registry_repository.minehub.name }
+
+resource "google_project_iam_member" "firestore_user" {
+  project=var.project_id
+  role="roles/datastore.user"
+  member=format("serviceAccount:%s",google_service_account.control.email)
+}
+resource "google_project_iam_member" "service_account_user" {
+  project=var.project_id
+  role="roles/iam.serviceAccountUser"
+  member=format("serviceAccount:%s",google_service_account.control.email)
+}
+resource "google_cloud_run_v2_service" "control" {
+  name="minehub-control"
+  location=var.region
+  ingress="INGRESS_TRAFFIC_ALL"
+  deletion_protection=false
+  template {
+    service_account=google_service_account.control.email
+    timeout="3600s"
+    scaling { min_instance_count=1 max_instance_count=3 }
+    containers {
+      image=var.image
+      ports { container_port=8080 }
+      env { name="GOOGLE_CLOUD_PROJECT" value=var.project_id }
+      env { name="GOOGLE_CLIENT_ID" value=var.google_client_id }
+      env { name="COMPUTE_ZONE" value="asia-south1-a" }
+      env { name="COMPUTE_NETWORK" value="default" }
+      env { name="MINECRAFT_MACHINE_TYPE" value="e2-small" }
+      env { name="MINECRAFT_DISK_GB" value="20" }
+      env { name="CONTROL_URL" value="https://PLACEHOLDER" }
+      env { name="CORS_ORIGINS" value="*" }
+    }
+  }
+  depends_on=[google_project_service.run,google_project_service.compute,google_project_service.firestore]
+}
+resource "google_cloud_run_v2_service_iam_member" "public" {
+  name=google_cloud_run_v2_service.control.name
+  location=google_cloud_run_v2_service.control.location
+  role="roles/run.invoker"
+  member="allUsers"
+}
+output "control_url" { value=google_cloud_run_v2_service.control.uri }
