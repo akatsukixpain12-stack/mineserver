@@ -5,8 +5,12 @@ from typing import Any
 import httpx
 from google.cloud import compute_v1
 from .config import settings
+from .runtime import resolve_runtime
 UA="MineHub/1.0 (https://github.com/akatsukixpain12-stack/mineserver)"
 async def resolve_jar_url(software,mc):
+    return await resolve_runtime(software,mc)
+
+async def _legacy_resolve_jar_url(software,mc):
     if software=="paper":
         async with httpx.AsyncClient(timeout=30) as c:r=await c.get(f"https://fill.papermc.io/v3/projects/paper/versions/{mc}/builds",headers={"User-Agent":UA});r.raise_for_status()
         a=[x for x in r.json() if x.get("channel")=="STABLE"]
@@ -28,7 +32,7 @@ async def resolve_jar_url(software,mc):
 def agent_source():return (Path(__file__).resolve().parents[1]/"agent"/"agent.py").read_text()
 def startup_script(server:dict[str,Any],jar_url):
     a=base64.b64encode(agent_source().encode()).decode()
-    meta=base64.b64encode(json.dumps({"server_id":server["id"],"agent_token":server["agent_token"],"control_url":settings.control_url,"jar_url":jar_url,"memory_mb":server.get("memory_mb",2048)}).encode()).decode()
+    meta=base64.b64encode(json.dumps({"server_id":server["id"],"agent_token":server["agent_token"],"control_url":settings.control_url,"jar_url":jar_url,"memory_mb":server.get("memory_mb",2048),"runtime":server.get("software","vanilla")}).encode()).decode()
     return f"""#!/bin/bash
 set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
@@ -38,7 +42,10 @@ mkdir -p /opt/minehub/server /opt/minehub
 printf '%s' '{a}' | base64 -d > /opt/minehub/agent.py
 printf '%s' '{meta}' | base64 -d > /opt/minehub/config.json
 cd /opt/minehub/server
-if [ ! -f server.jar ]; then curl -fL --retry 5 -A '{UA}' -o server.jar '{jar_url}'; fi
+if [ ! -f server.jar ] && [ ! -f installer.jar ]; then curl -fL --retry 5 -A '{UA}' -o server.jar '{jar_url}'; fi
+if [ "${server_runtime:-vanilla}" = "forge" ] || [ "${server_runtime:-vanilla}" = "neoforge" ]; then
+  if [ ! -f run.sh ]; then mv server.jar installer.jar 2>/dev/null || true; java -jar installer.jar --installServer; rm -f installer.jar; fi
+fi
 printf 'eula=true\\nserver-port=25565\\nserver-ip=\\nmax-players=20\\nmotd=MineHub Server\\n' > server.properties
 cat >/etc/systemd/system/minehub-agent.service <<'UNIT'
 [Unit]
