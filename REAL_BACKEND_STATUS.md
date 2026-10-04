@@ -1,1 +1,0 @@
-MineHub backend is now wired for real Compute Engine VM provisioning, real Minecraft runtime agents, WebSocket console control, metrics, Modrinth search/install and optional CurseForge search/install. See README.production.md.

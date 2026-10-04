@@ -17,6 +17,13 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+      - name: Restore required headless gametest crate
+        run: |
+          set -euxo pipefail
+          mkdir -p server/crates/pumpkin-gametest
+          git clone --depth 1 https://github.com/Pumpkin-MC/Pumpkin.git /tmp/pumpkin-source
+          rm -rf server/crates/pumpkin-gametest
+          cp -R /tmp/pumpkin-source/crates/pumpkin-gametest server/crates/pumpkin-gametest
       - name: Build headless Mineserver binary
         working-directory: server
         run: cargo build --release -p mineserver

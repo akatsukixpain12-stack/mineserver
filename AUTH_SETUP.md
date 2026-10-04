@@ -1,11 +1,21 @@
-# Mineserver Google authentication
+# Mineserver web authentication
 
-Mineserver uses Google Identity Services for account login. The backend verifies the Google ID token and uses the stable Google account subject as the owner ID for persistent server records.
+Mineserver is a web hosting control plane. Google Identity Services authenticates the browser, and FastAPI verifies the Google ID token server-side. The verified Google account subject is used as the persistent server owner ID.
 
-Set GOOGLE_CLIENT_ID on Cloud Run, add the deployed Mineserver origin to the OAuth client's Authorized JavaScript origins, and enable Firestore for persistent hosted server records.
+## Required Google setup
 
-Each server record is owned by the verified Google account subject. Firestore is used when configured; local development falls back to SQLite.
+Set `GOOGLE_CLIENT_ID` on the Mineserver Cloud Run control plane.
 
-The browser keeps the ID token in sessionStorage and sends it in the Authorization header. Never put a Google client secret in frontend code.
+For a Web application OAuth client, add the exact Mineserver web origin to **Authorized JavaScript origins**. Google documents that the Web Client ID identifies the application and that the site's origin must be registered. citeturn635625search0turn635625search2
 
-The complete Pumpkin source tree is not yet vendored into this repository; the available GitHub connector cannot import the full external 164 MB / 13,505-file tree in one wholesale operation.
+For GitHub Pages/static hosting, set the Mineserver API URL in the login panel. The static frontend cannot magically discover an unrelated Cloud Run hostname.
+
+## Persistent servers
+
+The control plane stores each server with the verified Google account subject as `owner_id`. Firestore is used when configured; local development falls back to SQLite.
+
+The browser stores the short-lived ID token in `sessionStorage` and sends it as a Bearer token. No Google client secret is placed in the web UI.
+
+## Native core
+
+The `server/` directory is the headless native Mineserver core used by the web control plane. Desktop-only/development-only Pumpkin app files are not part of the hosting panel. Upstream GPL-3.0 notices and required attribution remain in the native source.
