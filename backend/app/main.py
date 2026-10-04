@@ -5,6 +5,8 @@ from pathlib import Path
 from fastapi import Depends,FastAPI,Header,HTTPException,Query,WebSocket,WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token
 from pydantic import BaseModel,Field
 from .compute import create_vm,delete_vm,resolve_jar_url,vm_action
 from .runtime import RUNTIMES,catalog as runtime_catalog
@@ -20,14 +22,25 @@ AGENTS={};BROWSERS={}
 def now(): return datetime.now(timezone.utc).isoformat()
 
 
-def workspace(authorization: str|None=Header(default=None), x_workspace_id: str|None=Header(default=None)):
-    # Passwordless anonymous workspace. The browser generates a random workspace ID;
-    # there is no Google account, fake profile, or pre-login screen.
-    wid=(x_workspace_id or "").strip()
-    if not wid or len(wid)>128:
-        wid="default"
-    return {"id":wid,"name":""}
+def verify_google_id_token(raw_token: str):
+    if not settings.google_client_id:
+        raise HTTPException(503,"Google login is not configured. Set GOOGLE_CLIENT_ID on the server.")
+    try:
+        payload=id_token.verify_oauth2_token(raw_token, google_requests.Request(), settings.google_client_id)
+    except Exception as exc:
+        raise HTTPException(401,"Invalid or expired Google login token") from exc
+    if payload.get("iss") not in {"accounts.google.com","https://accounts.google.com"}:
+        raise HTTPException(401,"Invalid Google token issuer")
+    sub=str(payload.get("sub") or "").strip()
+    if not sub:
+        raise HTTPException(401,"Google token has no account subject")
+    return {"id":sub,"name":payload.get("name") or payload.get("email") or "Google user","email":payload.get("email") or "","picture":payload.get("picture") or ""}
 
+def workspace(authorization: str|None=Header(default=None)):
+    value=(authorization or "").strip()
+    if not value.lower().startswith("bearer "):
+        raise HTTPException(401,"Google sign-in required")
+    return verify_google_id_token(value[7:].strip())
 
 def user(u=Depends(workspace)): return u
 
@@ -58,7 +71,7 @@ async def healthz(): return {"ok":True,"persistent_store":store.persistent,"time
 
 @app.get("/api/config")
 async def public_config():
-    return {"app_name":settings.app_name,"auth":"anonymous-workspace"}
+    return {"app_name":settings.app_name,"auth":"google","google_client_id":settings.google_client_id}
 
 
 @app.post("/api/auth/check")
@@ -205,15 +218,24 @@ async def agent(ws:WebSocket,server_id:str,token:str):
 
 
 @app.websocket("/api/servers/{sid}/console")
-async def console(ws:WebSocket,sid:str,workspace_id:str="default"):
+async def console(ws:WebSocket,sid:str):
     s=store.get_server(sid)
-    if not s or s.get("owner_id")!=workspace_id:
+    if not s:
         await ws.close(code=4404);return
-    await ws.accept();BROWSERS.setdefault(sid,set()).add(ws)
+    await ws.accept()
     try:
+        auth=await ws.receive_json()
+        if auth.get("type")!="auth":
+            await ws.close(code=4401);return
+        u=verify_google_id_token(str(auth.get("token") or ""))
+        if s.get("owner_id")!=u["id"]:
+            await ws.close(code=4404);return
+        BROWSERS.setdefault(sid,set()).add(ws)
         while True:
             m=await ws.receive_json();a=AGENTS.get(sid)
-            if not a: await ws.send_json({"type":"error","message":"Minecraft runtime agent is offline"});continue
+            if not a:
+                await ws.send_json({"type":"error","message":"Minecraft runtime agent is offline"})
+                continue
             await a.send_json(m)
     except WebSocketDisconnect: pass
     finally: BROWSERS.get(sid,set()).discard(ws)

@@ -1,1 +1,11 @@
-# MineHub Google authentication\n\nThe frontend does NOT contain a pre-logged-in account.\n\n1. In Google Cloud Console, create a Web application OAuth 2.0 Client ID.\n2. Add the exact MineHub Cloud Run URL to Authorized JavaScript origins.\n3. Set GOOGLE_CLIENT_ID on the Cloud Run service to that client ID.\n4. Open MineHub. The first screen is the Google Identity Services button.\n5. Google returns an ID token to the browser. The FastAPI backend verifies that token against the configured client ID before any server API is allowed.\n6. The verified Google sub becomes the MineHub account owner ID. Server records therefore belong to the signed-in Google account instead of a hard-coded user.\n7. The browser stores the ID token only in sessionStorage. If it expires or is removed, the user must sign in again.\n\nDo not put a Google client secret in the browser. Google Identity Services uses the public web client ID; the backend verifies the returned ID token.\n\n## Deployment order\n\nBuild the image first, deploy Cloud Run, copy the resulting Cloud Run URL into CONTROL_URL, then restart/redeploy. The Compute Engine runtime agent uses that URL for its outbound WebSocket.\n\nThe current backend intentionally has no fallback admin login. If Google OAuth is not configured, the sign-in screen reports that configuration error rather than silently logging somebody in.\n\n## Real player data\n\nThe VM agent starts the Minecraft Java server, periodically sends the list command, parses the server player count, and streams player updates through the control plane. The dashboard never creates fake player names or counts.\n
+# Mineserver Google authentication
+
+Mineserver uses Google Identity Services for account login. The backend verifies the Google ID token and uses the stable Google account subject as the owner ID for persistent server records.
+
+Set GOOGLE_CLIENT_ID on Cloud Run, add the deployed Mineserver origin to the OAuth client's Authorized JavaScript origins, and enable Firestore for persistent hosted server records.
+
+Each server record is owned by the verified Google account subject. Firestore is used when configured; local development falls back to SQLite.
+
+The browser keeps the ID token in sessionStorage and sends it in the Authorization header. Never put a Google client secret in frontend code.
+
+The complete Pumpkin source tree is not yet vendored into this repository; the available GitHub connector cannot import the full external 164 MB / 13,505-file tree in one wholesale operation.

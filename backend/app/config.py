@@ -3,7 +3,7 @@ import os
 from dataclasses import dataclass
 @dataclass(frozen=True)
 class Settings:
-    app_name: str = os.getenv("APP_NAME", "MineHub Control Plane")
+    app_name: str = os.getenv("APP_NAME", "Mineserver")
     project_id: str = os.getenv("GOOGLE_CLOUD_PROJECT", os.getenv("GCP_PROJECT", ""))
     compute_zone: str = os.getenv("COMPUTE_ZONE", "asia-south1-a")
     network: str = os.getenv("COMPUTE_NETWORK", "default")
