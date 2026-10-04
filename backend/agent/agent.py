@@ -2,7 +2,7 @@ from __future__ import annotations
 import asyncio,json,re,shutil,time,urllib.request,subprocess
 from pathlib import Path
 import psutil,websockets
-ROOT=Path("/opt/minehub");SERVER=ROOT/"server";C=json.loads((ROOT/"config.json").read_text());BASE=C["control_url"].rstrip("/").replace("https://","wss://").replace("http://","ws://");URL=f"{BASE}/agent/ws?server_id={C['server_id']}&token={C['agent_token']}";MEM=int(C.get("memory_mb",2048));process=None;lock=asyncio.Lock();players=set()
+ROOT=Path("/opt/minehub");SERVER=ROOT/"server";C=json.loads((ROOT/"config.json").read_text());BASE=C["control_url"].rstrip("/").replace("https://","wss://").replace("http://","ws://");URL=f"{BASE}/agent/ws?server_id={C['server_id']}&token={C['agent_token']}";MEM=int(C.get("memory_mb",2048));process=None;lock=asyncio.Lock();players=set();max_players=20
 def safe(rel):
     p=(SERVER/rel.strip().replace("\\","/")).resolve()
     if p!=SERVER and SERVER not in p.parents:raise ValueError("Invalid path")
@@ -33,8 +33,16 @@ def parse_player(line):
     if m:players.add(m.group(1))
     m=re.search(r"([A-Za-z0-9_]{1,16}) left the game",line)
     if m:players.discard(m.group(1))
+def parse_list(line):
+    global max_players
+    m=re.search(r"There are (\\d+) of a max of (\\d+) players online",line)
+    if m:return int(m.group(1)),int(m.group(2))
+    m=re.search(r"There are (\\d+) of a max (\\d+) players online",line)
+    if m:return int(m.group(1)),int(m.group(2))
+    return None
+
 def metrics():
-    m=psutil.virtual_memory();d=psutil.disk_usage(str(SERVER));return {"cpu":psutil.cpu_percent(),"ram_used_mb":round(m.used/1048576),"ram_total_mb":round(m.total/1048576),"disk_used_gb":round(d.used/1073741824,2),"disk_total_gb":round(d.total/1073741824,2),"minecraft_running":bool(process and process.poll() is None),"players_online":len(players)}
+    m=psutil.virtual_memory();d=psutil.disk_usage(str(SERVER));return {"cpu":psutil.cpu_percent(),"ram_used_mb":round(m.used/1048576),"ram_total_mb":round(m.total/1048576),"disk_used_gb":round(d.used/1073741824,2),"disk_total_gb":round(d.total/1073741824,2),"minecraft_running":bool(process and process.poll() is None),"players_online":len(players),"players":sorted(players),"max_players":max_players}
 async def output(ws):
     while True:
         if process and process.stdout:
@@ -43,7 +51,12 @@ async def output(ws):
             else:await asyncio.sleep(.1)
         else:await asyncio.sleep(.5)
 async def metrics_loop(ws):
-    while True:await send(ws,{"type":"metrics","data":metrics()});await asyncio.sleep(3)
+    while True:
+        if process and process.poll() is None:
+            try: command("list")
+            except Exception: pass
+        await send(ws,{"type":"metrics","data":metrics()})
+        await asyncio.sleep(5)
 async def handle(ws,m):
     t=m.get("type")
     if t=="power":
