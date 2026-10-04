@@ -74,11 +74,11 @@ def create_vm(server,jar_url):
     zone=server.get("zone") or zone_map.get(server.get("region"),settings.compute_zone)
     if not settings.project_id:raise RuntimeError("GOOGLE_CLOUD_PROJECT is required")
     ensure_firewall();c=compute_v1.InstancesClient()
-    disk=compute_v1.AttachedDisk(boot=True,auto_delete=True,initialize_params=compute_v1.AttachedDiskInitializeParams(source_image="projects/ubuntu-os-cloud/global/images/family/ubuntu-2404-lts-amd64",disk_size_gb=settings.disk_gb,disk_type=f"projects/{settings.project_id}/zones/{settings.compute_zone}/diskTypes/pd-balanced"))
+    disk=compute_v1.AttachedDisk(boot=True,auto_delete=True,initialize_params=compute_v1.AttachedDiskInitializeParams(source_image="projects/ubuntu-os-cloud/global/images/family/ubuntu-2404-lts-amd64",disk_size_gb=settings.disk_gb,disk_type=f"projects/{settings.project_id}/zones/{zone}/diskTypes/pd-balanced"))
     nic=compute_v1.NetworkInterface(network=f"projects/{settings.project_id}/global/networks/{settings.network}",access_configs=[compute_v1.AccessConfig(name="External NAT",type_="ONE_TO_ONE_NAT")])
     md=compute_v1.Metadata(items=[compute_v1.Items(key="startup-script",value=startup_script(server,jar_url))])
-    ins=compute_v1.Instance(name=server["vm_name"],machine_type=f"zones/{settings.compute_zone}/machineTypes/{settings.machine_type}",disks=[disk],network_interfaces=[nic],metadata=md,tags=compute_v1.Tags(items=["minehub-minecraft"]),labels={"minehub":"true","minehub-server":server["id"][:63]})
-    wait(c.insert(project=settings.project_id,zone=settings.compute_zone,instance_resource=ins))
+    ins=compute_v1.Instance(name=server["vm_name"],machine_type=f"zones/{zone}/machineTypes/{settings.machine_type}",disks=[disk],network_interfaces=[nic],metadata=md,tags=compute_v1.Tags(items=["minehub-minecraft"]),labels={"minehub":"true","minehub-server":server["id"][:63]})
+    wait(c.insert(project=settings.project_id,zone=zone,instance_resource=ins))
     for _ in range(90):
         cur=c.get(project=settings.project_id,zone=zone,instance=server["vm_name"])
         if cur.network_interfaces and cur.network_interfaces[0].access_configs:
