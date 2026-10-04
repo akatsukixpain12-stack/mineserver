@@ -45,7 +45,11 @@ JAVA_MAJOR=$(python3 -c 'import json; print(json.load(open("/opt/minehub/config.
 export JAVA_HOME="/usr/lib/jvm/java-$JAVA_MAJOR-openjdk-amd64"
 export PATH="$JAVA_HOME/bin:$PATH"
 cd /opt/minehub/server
-if [ ! -f server.jar ] && [ ! -f installer.jar ]; then curl -fL --retry 5 -A '{UA}' -o server.jar '{jar_url}'; fi
+if [ "{server.get("software","vanilla")}" = "pumpkin" ]; then
+  if [ ! -f pumpkin ]; then curl -fL --retry 5 -A '{UA}' -o pumpkin '{jar_url}'; chmod +x pumpkin; fi
+elif [ ! -f server.jar ] && [ ! -f installer.jar ]; then
+  curl -fL --retry 5 -A '{UA}' -o server.jar '{jar_url}'
+fi
 if [ "{server.get("software","vanilla")}" = "forge" ] || [ "{server.get("software","vanilla")}" = "neoforge" ]; then
   if [ ! -f run.sh ]; then mv server.jar installer.jar 2>/dev/null || true; java -jar installer.jar --installServer; rm -f installer.jar; fi
 fi
