@@ -156,7 +156,7 @@ async def install(sid,body:InstallRequest,u=Depends(user)):
             p={"url":f["url"],"name":v["name"],"target":"plugins" if body.type=="plugin" else "mods"}
     elif body.provider=="curseforge":
         f=await curseforge_file(int(body.project_id),s["mc_version"],body.loader)
-        p={"url":f["downloadUrl"],"name":f["displayName"],"target":"mods"}
+        p={"url":f["downloadUrl"],"name":f["displayName"],"target":"plugins" if body.type=="plugin" else "mods"}
     else: raise HTTPException(400,"Invalid provider")
     a=AGENTS.get(sid)
     if not a: raise HTTPException(409,"Runtime agent is offline")
