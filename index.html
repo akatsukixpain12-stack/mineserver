@@ -1,182 +1,317 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Mineserver — Minecraft Server Control</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mineserver — Minecraft Hosting</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<meta name="mineserver-api-url" content="">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
-:root{--bg:#070807;--panel:#0d100e;--panel2:#111512;--panel3:#151a16;--line:#222a24;--text:#f4f7f3;--muted:#8e9990;--green:#7ee787;--green2:#35c759;--red:#ff6b6b;--yellow:#f3c969;--blue:#72b7ff;--r:14px}
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}.side{border-right:1px solid var(--line);background:#090b09;position:sticky;top:0;height:100vh;padding:16px 12px;display:flex;flex-direction:column}.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:15px;padding:7px 9px 24px}.brandmark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#b8ff9c,#46d36c);display:grid;place-items:center;color:#061008;font-weight:900}.section{font-size:10px;color:#58635b;text-transform:uppercase;letter-spacing:1.2px;padding:14px 10px 7px}.nav{display:grid;gap:3px}.nav button{border:0;background:transparent;color:#879187;text-align:left;padding:10px 11px;border-radius:9px;font-size:11px;display:flex;gap:10px;align-items:center}.nav button:hover{background:#121713;color:#fff}.nav button.active{background:#142017;color:#fff;box-shadow:inset 2px 0 var(--green)}.nav i{width:18px;text-align:center;font-style:normal;color:#738078}.sidebottom{margin-top:auto}.workspace{border:1px solid var(--line);border-radius:11px;padding:10px;background:#0d110e;display:flex;gap:9px;align-items:center}.pulse{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 10px #7ee787}.workspace b{font-size:10px}.workspace small{display:block;color:#687269;font-size:8px;margin-top:2px}.main{min-width:0;padding:22px 28px 50px}.top{max-width:1400px;margin:auto;display:flex;align-items:center;justify-content:space-between;height:40px;margin-bottom:25px}.crumb{color:#657067;font-size:11px}.crumb b{color:#dce5dd}.topactions{display:flex;gap:7px}.btn{border:1px solid var(--line);background:#101410;color:#aeb8b0;border-radius:9px;padding:8px 11px;font-size:10px}.btn:hover{background:#171d18;color:#fff}.btn.primary{border:0;background:var(--green);color:#071008;font-weight:800}.btn.danger{color:#ff8888}.page{display:none;max-width:1400px;margin:auto}.page.active{display:block}.hero{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px}.eyebrow{color:var(--green);font-size:9px;text-transform:uppercase;letter-spacing:1.5px}.hero h1{font-size:29px;letter-spacing:-1.3px;margin:6px 0}.hero p{font-size:11px;color:var(--muted);margin:0}.layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(310px,.65fr);gap:14px}.card{border:1px solid var(--line);border-radius:var(--r);background:linear-gradient(145deg,#101410,#0c0f0d);overflow:hidden}.head{height:52px;border-bottom:1px solid var(--line);padding:0 15px;display:flex;align-items:center;justify-content:space-between}.head h2{font-size:12px;margin:0}.head span{font-size:9px;color:#687269}.serverlist{padding:9px;display:grid;gap:7px}.server{border:1px solid var(--line);background:#0d120f;border-radius:11px;padding:11px;display:grid;grid-template-columns:44px 1fr auto;gap:11px;align-items:center;cursor:pointer}.server:hover,.server.selected{border-color:#3b6845;background:#101a13}.servericon{width:44px;height:44px;border-radius:10px;background:linear-gradient(145deg,#1d4227,#13261a);display:grid;place-items:center;font-size:20px}.server h3{font-size:11px;margin:0 0 4px}.server p{font-size:9px;color:#707b72;margin:0}.status{font-size:8px;color:var(--green);margin-top:5px}.offline{color:#667068}.serverright{text-align:right}.serverright b{font-size:10px}.serverright small{display:block;color:#69736c;font-size:8px;margin-top:3px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.stat{border:1px solid var(--line);background:#0d120f;border-radius:11px;padding:12px}.stat label{font-size:8px;color:#69746c;text-transform:uppercase;letter-spacing:1px}.stat strong{display:block;font-size:15px;margin-top:7px}.meter{height:4px;background:#1d251f;border-radius:4px;margin-top:9px;overflow:hidden}.meter i{display:block;height:100%;width:0;background:var(--green);transition:.3s}.stack{display:grid;gap:14px}.overview{padding:16px}.ovtitle{display:flex;gap:11px;align-items:center}.bigicon{width:50px;height:50px;border-radius:13px;background:#18301d;display:grid;place-items:center;font-size:23px}.ovtitle h2{font-size:15px;margin:0}.ovtitle p{font-size:9px;color:#707a72;margin:4px 0 0}.dotline{font-size:9px;margin-top:15px;color:var(--green)}.addr{display:flex;gap:6px;align-items:center;margin-top:11px;background:#080b09;border:1px solid var(--line);padding:9px;border-radius:8px;font:9px 'JetBrains Mono';color:#a9b4ab}.addr span{flex:1;overflow:hidden;text-overflow:ellipsis}.power{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:9px}.power button{background:#131914;border:1px solid var(--line);border-radius:8px;padding:8px;color:#aab4ac;font-size:9px}.power .start{color:var(--green)}.power .stop{color:#ff8585}.terminalmini{height:185px;background:#050705;padding:11px;overflow:auto;font:9px/1.6 'JetBrains Mono';color:#8f9c92}.line{white-space:pre-wrap}.empty{padding:34px 18px;text-align:center;color:#626c64;font-size:10px}.empty b{display:block;color:#aab4ac;font-size:11px;margin-bottom:5px}.panel{border:1px solid var(--line);border-radius:var(--r);background:#0d110e}.terminal{height:calc(100vh - 180px);min-height:560px;display:flex;flex-direction:column}.termout{flex:1;overflow:auto;background:#050705;padding:14px;font:10px/1.65 'JetBrains Mono';color:#a7b2aa}.cmd{display:flex;gap:7px;padding:9px;border-top:1px solid var(--line)}.cmd input,.field{background:#080b09;border:1px solid var(--line);color:#dce5de;border-radius:8px;padding:9px;outline:0;font-size:10px}.cmd input{flex:1;font-family:'JetBrains Mono'}.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:12px}.tabs button{background:transparent;border:0;color:#78837a;padding:10px 12px;font-size:9px;border-bottom:2px solid transparent}.tabs button.active{color:#fff;border-color:var(--green)}.toolbar{display:flex;gap:7px;margin-bottom:9px}.toolbar input{flex:1}.catalog{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.project{border:1px solid var(--line);background:#0d120f;border-radius:11px;padding:12px;display:flex;gap:10px;align-items:center}.projecticon{width:42px;height:42px;border-radius:9px;background:#17221a;display:grid;place-items:center}.project h3{font-size:10px;margin:0 0 4px}.project p{font-size:8px;color:#6f7971;margin:0}.project button{margin-left:auto}.files{display:grid;grid-template-columns:280px 1fr;min-height:560px}.tree{border-right:1px solid var(--line);padding:10px}.treehead{font:9px 'JetBrains Mono';color:#69736b;padding:8px;border-bottom:1px solid var(--line);margin-bottom:4px}.frow{padding:8px;border-radius:7px;font-size:9px}.frow:hover{background:#141a15}.editor{display:flex;flex-direction:column}.editorhead{padding:10px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;font-size:9px}.editor textarea{flex:1;min-height:510px;background:#050705;color:#b8c3ba;border:0;outline:0;padding:14px;font:10px/1.7 'JetBrains Mono';resize:none}.players{display:grid;grid-template-columns:1.2fr .8fr;gap:14px}.prow{padding:11px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center}.skin{width:30px;height:30px;border-radius:7px;background:#19241c}.prow b{font-size:10px}.prow span{margin-left:auto;color:#69736b;font-size:8px}.bigstat{padding:18px}.bigstat strong{font-size:30px}.settings{display:grid;grid-template-columns:1fr 1fr;gap:10px}.setting{padding:15px}.setting label{display:block;color:#69736b;font-size:8px;text-transform:uppercase;margin-bottom:6px}.setting input,.setting select{width:100%;background:#080b09;border:1px solid var(--line);border-radius:8px;padding:9px;color:#dce5de}.modal{position:fixed;inset:0;background:#000b;backdrop-filter:blur(8px);display:none;place-items:center;padding:20px;z-index:50}.modal.show{display:grid}.modalbox{width:min(900px,100%);max-height:92vh;overflow:auto;background:#0e120f;border:1px solid #303a31;border-radius:18px;box-shadow:0 35px 120px #000}.modalhead{padding:17px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}.modalhead h2{font-size:15px;margin:0}.createbody{padding:17px;display:grid;gap:13px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.formgrid label,.createbody>label{font-size:9px;color:#879188}.formgrid input,.formgrid select,.createbody input,.createbody select{width:100%;margin-top:6px;background:#080b09;border:1px solid var(--line);color:#e1e9e2;border-radius:8px;padding:10px}.runtimegrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:7px}.runtime{border:1px solid var(--line);background:#0b0f0c;border-radius:9px;padding:10px;text-align:left;color:#aab4ac}.runtime b{display:block;font-size:9px;color:#e8eee9}.runtime small{display:block;font-size:7px;color:#69736b;margin-top:3px}.runtime.selected{border-color:#4b8a58;background:#142218}.versionbox{border:1px solid var(--line);border-radius:11px;padding:11px;background:#0a0e0b}.versiontop{display:flex;gap:7px;align-items:center}.versiontop input{flex:1}.versioncount{font-size:8px;color:#69736b}.versions{display:flex;flex-wrap:wrap;gap:5px;max-height:180px;overflow:auto;margin-top:8px}.version{border:1px solid var(--line);background:#101510;color:#aeb8b0;border-radius:7px;padding:7px 9px;font-size:8px}.version:hover{border-color:#4a7d53;color:#fff}.version.selected{background:#18351f;border-color:var(--green);color:#fff}.modalfoot{border-top:1px solid var(--line);padding:12px 17px;display:flex;justify-content:flex-end;gap:7px}.toast{position:fixed;right:20px;bottom:20px;background:#141b16;border:1px solid #354138;border-radius:9px;padding:10px 13px;font-size:9px;z-index:100;color:#e8eee9}.hide{display:none!important}@media(max-width:900px){.app{grid-template-columns:1fr}.side{display:none}.main{padding:16px}.layout,.players{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.catalog{grid-template-columns:1fr}.settings,.formgrid{grid-template-columns:1fr}.runtimegrid{grid-template-columns:1fr 1fr}.files{grid-template-columns:1fr}.tree{border-right:0;border-bottom:1px solid var(--line)}}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+:root{--bg:#071008;--panel:#0d160f;--panel2:#111c13;--panel3:#162319;--line:#243226;--text:#f2f7f2;--muted:#8a998d;--green:#78e08f;--green2:#43c76a;--red:#ff7171;--yellow:#f3ca6a;--blue:#75b6ff;--shadow:0 25px 90px rgba(0,0,0,.34);--r:16px}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(1000px 700px at 15% -10%,rgba(69,172,93,.08),transparent 55%),var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}.side{height:100vh;position:sticky;top:0;display:flex;flex-direction:column;border-right:1px solid var(--line);background:rgba(7,12,8,.94);backdrop-filter:blur(16px);padding:18px 12px}.brand{display:flex;align-items:center;gap:10px;font-weight:800;padding:6px 8px 22px}.mark{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#bdf7bb,#55d77f);display:grid;place-items:center;color:#061008;font-weight:900}.eyebrow{color:var(--green);font-size:10px;text-transform:uppercase;letter-spacing:1.5px}.section{font-size:10px;color:#657267;text-transform:uppercase;letter-spacing:1.3px;padding:15px 10px 7px}.nav{display:grid;gap:4px}.nav button{border:0;background:transparent;color:#87948a;text-align:left;padding:10px 11px;border-radius:10px;font-size:11px;display:flex;align-items:center;gap:10px}.nav button:hover{background:#101911;color:#fff}.nav button.active{background:#16251a;color:#fff;box-shadow:inset 2px 0 var(--green)}.nav i{width:18px;text-align:center;font-style:normal;color:#6e7d72}.nav .soon{margin-left:auto;font-size:8px;color:#66736a;border:1px solid var(--line);padding:2px 5px;border-radius:999px}.account{margin-top:auto;border:1px solid var(--line);background:#0d140f;border-radius:12px;padding:10px}.accountrow{display:flex;align-items:center;gap:9px}.avatar{width:30px;height:30px;border-radius:50%;display:block}.avatar.hide{display:none}.accounttext{min-width:0}.accounttext b,.accounttext small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.accounttext b{font-size:10px}.accounttext small{font-size:8px;color:#6d786f;margin-top:2px}.main{min-width:0;padding:22px 28px 40px}.top{height:42px;display:flex;align-items:center;justify-content:space-between;max-width:1500px;margin:0 auto 22px}.crumb{color:#667268;font-size:11px}.crumb b{color:#dfe7df}.topactions{display:flex;gap:8px}.btn{border:1px solid var(--line);background:#101810;color:#b5c0b8;border-radius:10px;padding:9px 12px;font-size:10px}.btn:hover{background:#162017;color:#fff}.btn.primary{border:0;background:var(--green);color:#061008;font-weight:800}.btn.danger{color:#ff9090}.page{display:none;max-width:1500px;margin:0 auto}.page.active{display:block}.hero{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px}.hero h1{font-size:31px;letter-spacing:-1.5px;margin:7px 0 6px}.hero p{font-size:11px;color:var(--muted);margin:0}.grid2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(330px,.65fr);gap:14px}.card{border:1px solid var(--line);border-radius:var(--r);background:linear-gradient(145deg,var(--panel2),var(--panel));box-shadow:var(--shadow);overflow:hidden}.head{height:54px;border-bottom:1px solid var(--line);padding:0 16px;display:flex;align-items:center;justify-content:space-between}.head h2{font-size:12px;margin:0}.head span{font-size:9px;color:#718077}.serverlist{padding:9px;display:grid;gap:8px}.server{display:grid;grid-template-columns:46px minmax(0,1fr) auto;gap:11px;align-items:center;border:1px solid var(--line);border-radius:12px;background:#0d150f;padding:11px;cursor:pointer}.server:hover,.server.selected{background:#132017;border-color:#3a6542}.servericon{width:46px;height:46px;border-radius:12px;background:linear-gradient(145deg,#1d3c23,#15271a);display:grid;place-items:center;font-size:20px}.server h3{margin:0 0 4px;font-size:11px}.server p{margin:0;color:#718078;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.status{margin-top:6px;color:var(--green);font-size:8px;text-transform:uppercase;letter-spacing:.8px}.offline{color:#6d786f}.serverright{text-align:right}.serverright b{font-size:10px}.serverright small{display:block;color:#69756c;font-size:8px;margin-top:3px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.stat{border:1px solid var(--line);background:#0d150f;border-radius:12px;padding:13px}.stat label{font-size:8px;color:#6c786f;text-transform:uppercase;letter-spacing:1px}.stat strong{display:block;margin-top:7px;font-size:16px}.meter{height:4px;border-radius:9px;background:#1e2921;margin-top:10px;overflow:hidden}.meter i{display:block;height:100%;width:0;background:var(--green);transition:.25s}.stack{display:grid;gap:14px}.overview{padding:17px}.ovtitle{display:flex;align-items:center;gap:12px}.bigicon{width:52px;height:52px;border-radius:14px;background:#18301c;display:grid;place-items:center;font-size:23px}.ovtitle h2{font-size:16px;margin:0}.ovtitle p{color:#748076;font-size:9px;margin:4px 0 0}.state{margin-top:15px;color:var(--green);font-size:9px}.address{margin-top:11px;display:flex;gap:7px;align-items:center;border:1px solid var(--line);background:#080d09;border-radius:9px;padding:9px;font:9px 'JetBrains Mono';color:#acb8ae}.address span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.power{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:9px}.power button{border:1px solid var(--line);background:#121a13;color:#aeb9b0;border-radius:8px;padding:9px;font-size:9px}.power .start{color:var(--green)}.power .stop{color:#ff8a8a}.terminalmini{height:188px;overflow:auto;background:#050806;padding:12px;font:9px/1.65 'JetBrains Mono';color:#9eaaa1}.line{white-space:pre-wrap}.empty{padding:38px 18px;text-align:center;color:#606d64;font-size:10px}.empty b{display:block;color:#aebbb1;font-size:11px;margin-bottom:7px}.panel{border:1px solid var(--line);border-radius:var(--r);background:#0d150f;overflow:hidden}.terminal{min-height:600px;height:calc(100vh - 180px);display:flex;flex-direction:column}.termout{flex:1;overflow:auto;background:#050806;padding:15px;font:10px/1.65 'JetBrains Mono';color:#aab7ad}.cmd{display:flex;gap:7px;padding:10px;border-top:1px solid var(--line)}.field,.cmd input,.input{background:#090e0a;border:1px solid var(--line);color:#e4ebe5;border-radius:9px;padding:10px;outline:0;font-size:10px}.cmd input{flex:1;font-family:'JetBrains Mono'}.tabs{display:flex;gap:5px;border-bottom:1px solid var(--line);margin-bottom:12px}.tabs button{border:0;background:transparent;color:#778479;padding:11px 13px;font-size:9px;border-bottom:2px solid transparent}.tabs button.active{color:#fff;border-color:var(--green)}.toolbar{display:flex;gap:7px;padding:12px;border-bottom:1px solid var(--line)}.toolbar input{flex:1}.catalog{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:10px}.project{display:flex;gap:10px;align-items:center;border:1px solid var(--line);background:#0c140e;border-radius:12px;padding:12px}.projecticon{width:42px;height:42px;border-radius:10px;background:#16251a;display:grid;place-items:center}.project h3{font-size:10px;margin:0 0 4px}.project p{font-size:8px;color:#707c73;margin:0;max-width:420px}.project button{margin-left:auto}.files{display:grid;grid-template-columns:300px 1fr;min-height:620px}.tree{border-right:1px solid var(--line);padding:10px}.treehead{font:9px 'JetBrains Mono';color:#6d796f;border-bottom:1px solid var(--line);padding:8px;margin-bottom:4px}.frow{padding:8px;border-radius:7px;font-size:9px}.frow:hover{background:#152017}.editor{display:flex;flex-direction:column}.editorhead{padding:10px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;font-size:9px}.editor textarea{flex:1;min-height:560px;resize:none;background:#050806;color:#b6c2b8;border:0;outline:0;padding:15px;font:10px/1.7 'JetBrains Mono'}.players{display:grid;grid-template-columns:1.3fr .7fr;gap:14px}.prow{display:flex;align-items:center;gap:10px;padding:11px;border-bottom:1px solid var(--line)}.prow b{font-size:10px}.prow span{margin-left:auto;color:#69766d;font-size:8px}.skin{width:30px;height:30px;border-radius:8px;background:#18241b}.bigstat{padding:18px}.bigstat label{font-size:8px;color:#67736b}.bigstat strong{display:block;font-size:34px;margin:6px 0}.gridSettings{display:grid;grid-template-columns:1fr 1fr;gap:10px}.setting{padding:16px}.setting label{display:block;color:#6d796f;font-size:8px;text-transform:uppercase;letter-spacing:.7px;margin:10px 0 6px}.setting label:first-child{margin-top:0}.setting input,.setting select{width:100%}.notready{padding:42px;text-align:center}.notready h2{margin:0 0 7px;font-size:16px}.notready p{color:var(--muted);font-size:10px;margin:0}.modal{position:fixed;inset:0;background:rgba(0,0,0,.68);backdrop-filter:blur(10px);display:none;place-items:center;padding:20px;z-index:50}.modal.show{display:grid}.modalbox{width:min(930px,100%);max-height:92vh;overflow:auto;border:1px solid #314235;border-radius:20px;background:#0d150f;box-shadow:0 40px 130px rgba(0,0,0,.65)}.modalhead{padding:17px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.modalhead h2{font-size:15px;margin:0}.steps{display:flex;gap:6px;padding:12px 17px;border-bottom:1px solid var(--line)}.step{flex:1;height:5px;border-radius:99px;background:#1f2a22}.step.active{background:var(--green)}.step.done{background:#4a8b58}.createbody{padding:18px}.wizard{display:none}.wizard.active{display:block}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.fieldwrap label{display:block;color:#7a877d;font-size:9px}.fieldwrap .field{width:100%;margin-top:6px}.runtimegrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:9px}.runtime{border:1px solid var(--line);background:#0a110c;color:#acb8ae;border-radius:10px;padding:10px;text-align:left}.runtime b{display:block;font-size:9px;color:#edf3ed}.runtime small{display:block;font-size:7px;color:#6d786f;margin-top:4px;line-height:1.45}.runtime.selected{border-color:#4a8453;background:#142219}.versionbox{border:1px solid var(--line);border-radius:12px;background:#0a110c;padding:11px;margin-top:9px}.versiontop{display:flex;gap:7px;align-items:center}.versiontop input{flex:1}.versionfilters{display:flex;gap:7px;align-items:center;margin-top:8px}.versions{display:flex;flex-wrap:wrap;gap:5px;max-height:220px;overflow:auto;margin-top:8px}.version{border:1px solid var(--line);background:#101810;color:#acb7ae;border-radius:7px;padding:7px 9px;font-size:8px}.version:hover{border-color:#4f8758}.version.selected{background:#17331d;border-color:var(--green);color:#fff}.review{display:grid;grid-template-columns:1fr 1fr;gap:9px}.review .r{border:1px solid var(--line);border-radius:11px;background:#0a110c;padding:12px}.review .r span{display:block;color:#68756c;font-size:8px;text-transform:uppercase}.review .r b{display:block;font-size:11px;margin-top:5px}.modalfoot{padding:12px 17px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:7px}.toast{position:fixed;right:18px;bottom:18px;z-index:100;background:#121b15;border:1px solid #344238;border-radius:10px;padding:11px 13px;font-size:9px;max-width:430px;box-shadow:var(--shadow)}.login{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:22px;background:radial-gradient(700px 450px at 50% 15%,rgba(79,194,102,.11),transparent 60%),#060b07}.loginbox{width:min(470px,100%);border:1px solid var(--line);border-radius:22px;background:#0d150f;padding:30px;box-shadow:0 45px 140px rgba(0,0,0,.62)}.loginmark{width:52px;height:52px;border-radius:15px;background:linear-gradient(135deg,#bdf7bb,#55d77f);display:grid;place-items:center;color:#061008;font-weight:900;font-size:21px;margin-bottom:20px}.login h1{font-size:29px;letter-spacing:-1.2px;margin:8px 0}.login p{font-size:12px;line-height:1.65;color:var(--muted);margin:0 0 18px}.loginstatus{font-size:10px;color:#738078;min-height:18px}.configError{border:1px solid rgba(255,113,113,.28);background:rgba(255,113,113,.05);color:#ffb0b0;border-radius:10px;padding:10px;font-size:9px;margin-bottom:12px;display:none}.configError.show{display:block}.retry{display:none;margin-top:11px}.retry.show{display:inline-flex}@media(max-width:1050px){.app{grid-template-columns:76px 1fr}.side{padding:15px 9px}.brand{justify-content:center}.brand>span:last-child,.section,.nav button span,.accounttext,.nav .soon{display:none}.nav button{justify-content:center}.grid2,.players{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.catalog{grid-template-columns:1fr}}@media(max-width:700px){.app{grid-template-columns:1fr}.side{display:none}.main{padding:14px}.topactions .btn:first-child{display:none}.stats{grid-template-columns:1fr 1fr}.formgrid,.review{grid-template-columns:1fr}.runtimegrid{grid-template-columns:1fr 1fr}.files{grid-template-columns:1fr}.tree{border-right:0;border-bottom:1px solid var(--line)}.hero h1{font-size:25px}}
 </style>
 </head>
 <body>
-<div id="loginGate" style="position:fixed;inset:0;background:#070807;color:#f4f7f3;display:grid;place-items:center;z-index:9999;padding:24px"><div style="width:min(430px,100%);border:1px solid #222a24;border-radius:20px;background:#0d100e;padding:28px;box-shadow:0 30px 100px #000"><div style="width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#b8ff9c,#46d36c);display:grid;place-items:center;color:#061008;font-weight:900;font-size:20px;margin-bottom:18px">M</div><div style="color:#7ee787;font-size:10px;text-transform:uppercase;letter-spacing:1.6px">Mineserver</div><h1 style="font-size:28px;letter-spacing:-1px;margin:7px 0">Your servers. Your account.</h1><p style="color:#8e9990;font-size:12px;line-height:1.6;margin:0 0 14px">Sign in with Google to keep your Minecraft servers stored to your account across sessions.</p>
-    <div id="googleButton"/>></div><div id="loginStatus" style="font-size:10px;color:#687269;margin-top:14px">Loading Google sign-in…</div></div></div>
+<div id="loginGate" class="login">
+  <div class="loginbox">
+    <div class="loginmark">M</div>
+    <div class="eyebrow">Mineserver</div>
+    <h1>Manage your Minecraft servers.</h1>
+    <p>One web platform for real Minecraft runtimes, live console output, files, software, metrics and server controls.</p>
+    <div id="configError" class="configError"></div>
+    <div id="googleButton"></div>
+    <div id="loginStatus" class="loginstatus">Checking Mineserver…</div>
+    <button id="loginRetry" class="btn retry" onclick="boot()">Retry</button>
+  </div>
+</div>
+
 <div class="app">
 <aside class="side">
- <div class="brand"><div class="brandmark">M</div>Mineserver</div>
- <div class="section">Server</div>
- <nav class="nav">
-  <button class="active" data-page="dashboard"><i>⌂</i>Dashboard</button>
-  <button data-page="console"><i>›_</i>Console</button>
-  <button data-page="software"><i>◇</i>Software & Mods</button>
-  <button data-page="files"><i>▤</i>Files</button>
-  <button data-page="players"><i>♟</i>Players</button>
-  <button data-page="settings"><i>⚙</i>Settings</button>
- </nav>
- <div class="section">Workspace</div>
- <nav class="nav"><button onclick="openCreate()"><i>＋</i>Create server</button></nav>
- <div class="sidebottom"><div class="workspace"><span class="pulse"></span><div><b id="accountName">Google account</b><small id="accountEmail">Signed in</small></div><button class="btn" style="margin-left:auto;padding:5px 7px" onclick="signOut()">↪</button></div></div></aside>
+  <div class="brand"><div class="mark">M</div><span>Mineserver</span></div>
+  <div class="section">Control</div>
+  <nav class="nav">
+    <button data-page="dashboard" class="active"><i>⌂</i><span>Dashboard</span></button>
+    <button data-page="console"><i>›_</i><span>Console</span></button>
+    <button data-page="files"><i>▤</i><span>Files</span></button>
+    <button data-page="software"><i>◇</i><span>Software</span></button>
+    <button data-page="players"><i>♟</i><span>Players</span></button>
+    <button data-page="backups"><i>◫</i><span>Backups</span><span class="soon">storage</span></button>
+    <button data-page="schedules"><i>◷</i><span>Schedules</span><span class="soon">jobs</span></button>
+    <button data-page="networking"><i>⌁</i><span>Networking</span></button>
+    <button data-page="settings"><i>⚙</i><span>Settings</span></button>
+  </nav>
+  <div class="section">Account</div>
+  <nav class="nav"><button data-page="account"><i>●</i><span>Account</span></button></nav>
+  <div class="account">
+    <div class="accountrow">
+      <img id="accountAvatar" class="avatar hide" alt="">
+      <div class="accounttext"><b id="accountName">Google account</b><small id="accountEmail">Not signed in</small></div>
+      <button class="btn" style="padding:6px 7px;margin-left:auto" onclick="signOut()">↪</button>
+    </div>
+  </div>
+</aside>
+
 <main class="main">
- <div class="top"><div class="crumb">Mineserver / <b id="crumb">Dashboard</b></div><div class="topactions"><button class="btn" onclick="refreshAll()">↻ Refresh</button><button class="btn primary" onclick="openCreate()">＋ New server</button></div></div>
-
-<section id="dashboard" class="page active">
- <div class="hero"><div><div class="eyebrow">Mineserver web control plane</div><h1>Your servers</h1><p>Live runtime state only. No fake players, metrics or console output.</p></div></div>
- <div class="layout">
-  <div>
-   <div class="card"><div class="head"><h2>Servers</h2><span id="serverTotal">0 servers</span></div><div id="serverList" class="serverlist"></div></div>
-   <div class="stats">
-    <div class="stat"><label>CPU</label><strong id="cpu">—</strong><div class="meter"><i id="cpuBar"></i></div></div>
-    <div class="stat"><label>Memory</label><strong id="ram">—</strong><div class="meter"><i id="ramBar"></i></div></div>
-    <div class="stat"><label>Storage</label><strong id="disk">—</strong><div class="meter"><i id="diskBar"></i></div></div>
-    <div class="stat"><label>Players</label><strong id="players">—</strong><div class="meter"><i id="playerBar"></i></div></div>
-   </div>
+  <div class="top">
+    <div class="crumb">Mineserver / <b id="crumb">Dashboard</b></div>
+    <div class="topactions"><button class="btn" onclick="refreshAll()">↻ Refresh</button><button class="btn primary" onclick="openCreate()">＋ New server</button></div>
   </div>
-  <div class="stack">
-   <div class="card"><div class="overview"><div class="ovtitle"><div class="bigicon">⛏</div><div><h2 id="selectedName">No server selected</h2><p id="selectedMeta">Create a server to begin</p></div></div><div id="selectedStatus" class="dotline">● offline</div><div class="addr"><span id="address">—</span><button class="btn" onclick="copyAddress()">Copy</button></div><div class="power"><button class="start" onclick="power('start')">Start</button><button onclick="power('restart')">Restart</button><button class="stop" onclick="power('stop')">Stop</button></div></div></div>
-   <div class="card"><div class="head"><h2>Live console</h2><span id="socketMini">offline</span></div><div id="miniConsole" class="terminalmini"><div class="empty"><b>Waiting for runtime</b>Select a server to stream its actual output.</div></div></div>
-  </div>
- </div>
-</section>
 
-<section id="console" class="page"><div class="hero"><div><div class="eyebrow">Runtime</div><h1>Console</h1><p id="consoleMeta">Select a server.</p></div></div><div class="panel terminal"><div class="head"><h2 id="consoleTitle">Console output</h2><span id="socketLabel">offline</span></div><div id="consoleOutput" class="termout"><div class="empty"><b>No runtime selected</b>Console lines will appear here when the real server connects.</div></div><div class="cmd"><input id="command" placeholder="Type a Minecraft command…" onkeydown="if(event.key==='Enter')sendCommand()"><button class="btn primary" onclick="sendCommand()">Send</button></div></div></section>
+  <section id="dashboard" class="page active">
+    <div class="hero"><div><div class="eyebrow">Mineserver web control plane</div><h1>Your servers</h1><p>Every value below comes from the persistent control plane or the real runtime agent.</p></div></div>
+    <div class="grid2">
+      <div>
+        <div class="card"><div class="head"><h2>My Servers</h2><span id="serverTotal">0 servers</span></div><div id="serverList" class="serverlist"></div></div>
+        <div class="stats">
+          <div class="stat"><label>CPU</label><strong id="cpu">—</strong><div class="meter"><i id="cpuBar"></i></div></div>
+          <div class="stat"><label>Memory</label><strong id="ram">—</strong><div class="meter"><i id="ramBar"></i></div></div>
+          <div class="stat"><label>Storage</label><strong id="disk">—</strong><div class="meter"><i id="diskBar"></i></div></div>
+          <div class="stat"><label>Players</label><strong id="players">—</strong><div class="meter"><i id="playerBar"></i></div></div>
+        </div>
+      </div>
+      <div class="stack">
+        <div class="card">
+          <div class="overview">
+            <div class="ovtitle"><div class="bigicon">⛏</div><div><h2 id="selectedName">No server selected</h2><p id="selectedMeta">Create a server to begin</p></div></div>
+            <div id="selectedStatus" class="state">● offline</div>
+            <div class="address"><span id="address">—</span><button class="btn" onclick="copyAddress()">Copy</button></div>
+            <div class="power"><button class="start" onclick="power('start')">Start</button><button onclick="power('restart')">Restart</button><button class="stop" onclick="power('stop')">Stop</button></div>
+          </div>
+        </div>
+        <div class="card"><div class="head"><h2>Live console</h2><span id="socketMini">offline</span></div><div id="miniConsole" class="terminalmini"><div class="empty"><b>Waiting for runtime</b>Select a server to stream its actual stdout.</div></div></div>
+      </div>
+    </div>
+  </section>
 
-<section id="software" class="page"><div class="hero"><div><div class="eyebrow">Marketplace</div><h1>Software & Mods</h1><p>Search live project providers and install into the selected server.</p></div></div><div class="tabs"><button class="active" onclick="setType('mod',this)">Mods</button><button onclick="setType('modpack',this)">Modpacks</button><button onclick="setType('plugin',this)">Plugins</button></div><div class="panel"><div class="toolbar"><input class="field" id="catalogQuery" placeholder="Search projects…" onkeydown="if(event.key==='Enter')searchCatalog()"><select class="field" id="catalogProvider"><option value="modrinth">Modrinth</option><option value="curseforge">CurseForge</option></select><select class="field" id="catalogLoader"><option value="">Any loader</option><option value="fabric">Fabric</option><option value="forge">Forge</option><option value="neoforge">NeoForge</option><option value="quilt">Quilt</option></select><button class="btn primary" onclick="searchCatalog()">Search</button></div><div id="catalogList" class="catalog"></div></div></section>
+  <section id="console" class="page">
+    <div class="hero"><div><div class="eyebrow">Runtime</div><h1>Console</h1><p id="consoleMeta">Select a server.</p></div></div>
+    <div class="panel terminal"><div class="head"><h2 id="consoleTitle">Console output</h2><span id="socketLabel">offline</span></div><div id="consoleOutput" class="termout"><div class="empty"><b>No runtime selected</b>Real server output will appear here when the runtime connects.</div></div><div class="cmd"><input id="command" placeholder="Type a Minecraft command…" onkeydown="if(event.key==='Enter')sendCommand()"><button class="btn primary" onclick="sendCommand()">Send</button></div></div>
+  </section>
 
-<section id="files" class="page"><div class="hero"><div><div class="eyebrow">Server storage</div><h1>Files</h1><p>Edit real runtime configuration files.</p></div></div><div class="panel files"><div class="tree"><div id="filePath" class="treehead">/</div><div id="fileList"><div class="empty">Connect to a server.</div></div></div><div class="editor"><div class="editorhead"><b id="editorName">No file selected</b><button class="btn primary" onclick="saveFile()">Save</button></div><textarea id="editorText" placeholder="Select a text configuration file…"></textarea></div></div></section>
+  <section id="software" class="page">
+    <div class="hero"><div><div class="eyebrow">Marketplace</div><h1>Software & Mods</h1><p>Search live Modrinth or CurseForge data against the selected server version and loader.</p></div></div>
+    <div class="tabs"><button class="active" onclick="setType('mod',this)">Mods</button><button onclick="setType('modpack',this)">Modpacks</button><button onclick="setType('plugin',this)">Plugins</button></div>
+    <div class="panel"><div class="toolbar"><input id="catalogQuery" class="field" placeholder="Search projects…" onkeydown="if(event.key==='Enter')searchCatalog()"><select id="catalogProvider" class="field"><option value="modrinth">Modrinth</option><option value="curseforge">CurseForge</option></select><select id="catalogLoader" class="field"><option value="">Any loader</option><option value="fabric">Fabric</option><option value="forge">Forge</option><option value="neoforge">NeoForge</option><option value="quilt">Quilt</option></select><button class="btn primary" onclick="searchCatalog()">Search</button></div><div id="catalogList" class="catalog"><div class="empty"><b>Select a server</b>Search and install only after a real server is selected.</div></div></div>
+  </section>
 
-<section id="players" class="page"><div class="hero"><div><div class="eyebrow">Live session</div><h1>Players</h1><p>Only players reported by the actual Minecraft runtime are shown.</p></div></div><div class="players"><div class="panel"><div class="head"><h2>Online players</h2><span id="playerCount">—</span></div><div id="playerList"></div></div><div class="card"><div class="bigstat"><label style="font-size:8px;color:#69736b">CAPACITY</label><strong id="capacityNumber">—</strong><p style="font-size:9px;color:#69736b">Reported by the selected server.</p></div></div></div></section>
+  <section id="files" class="page">
+    <div class="hero"><div><div class="eyebrow">Server storage</div><h1>Files</h1><p>Browse and edit real files through the runtime WebSocket.</p></div></div>
+    <div class="panel files"><div class="tree"><div id="filePath" class="treehead">/</div><div id="fileList"><div class="empty">Connect to a runtime.</div></div></div><div class="editor"><div class="editorhead"><b id="editorName">No file selected</b><button class="btn primary" onclick="saveFile()">Save</button></div><textarea id="editorText" placeholder="Select an editable configuration file."></textarea></div></div>
+  </section>
 
-<section id="settings" class="page"><div class="hero"><div><div class="eyebrow">Configuration</div><h1>Server settings</h1><p>Identity and runtime information from the selected server.</p></div></div><div class="settings"><div class="card setting"><label>Name</label><input id="settingName"><label style="margin-top:12px">Minecraft version</label><input id="settingVersion" readonly><label style="margin-top:12px">Software</label><input id="settingSoftware" readonly></div><div class="card setting"><label>Region</label><input id="settingRegion" readonly><label style="margin-top:12px">Runtime IP</label><input id="settingVm" readonly><label style="margin-top:12px">Memory</label><input id="settingMemory" readonly></div></div></section>
+  <section id="players" class="page">
+    <div class="hero"><div><div class="eyebrow">Live session</div><h1>Players</h1><p>Only players reported by the actual runtime are displayed.</p></div></div>
+    <div class="players"><div class="panel"><div class="head"><h2>Online players</h2><span id="playerCount">—</span></div><div id="playerList"></div></div><div class="card"><div class="bigstat"><label>ONLINE / CAPACITY</label><strong id="capacityNumber">—</strong><p style="color:var(--muted);font-size:9px">No placeholder players are generated.</p></div></div></div>
+  </section>
+
+  <section id="backups" class="page"><div class="hero"><div><div class="eyebrow">Persistent storage</div><h1>Backups</h1><p>Cloud backup controls appear when the configured storage service is available.</p></div></div><div class="panel notready"><h2>Backup storage</h2><p>Mineserver does not fabricate backup entries. This panel will surface only real Cloud Storage backup records.</p></div></section>
+  <section id="schedules" class="page"><div class="hero"><div><div class="eyebrow">Automation</div><h1>Schedules</h1><p>Scheduled jobs will be surfaced from the control plane when configured.</p></div></div><div class="panel notready"><h2>No scheduled jobs loaded</h2><p>No fake schedules are shown. Configure the scheduler backend to populate this page.</p></div></section>
+  <section id="networking" class="page"><div class="hero"><div><div class="eyebrow">Networking</div><h1>Networking</h1><p>Live address and visibility information for the selected runtime.</p></div></div><div class="card setting"><label style="display:block;color:#6d796f;font-size:8px;text-transform:uppercase;margin-bottom:6px">Server address</label><input id="networkAddress" class="input" readonly><label style="display:block;color:#6d796f;font-size:8px;text-transform:uppercase;margin:14px 0 6px">Visibility</label><input id="networkVisibility" class="input" readonly></div></section>
+
+  <section id="settings" class="page">
+    <div class="hero"><div><div class="eyebrow">Configuration</div><h1>Server settings</h1><p>Read-only values reflect the server record and runtime state.</p></div></div>
+    <div class="gridSettings">
+      <div class="card setting"><label>Name</label><input id="settingName" class="input" readonly><label>Minecraft version</label><input id="settingVersion" class="input" readonly><label>Software</label><input id="settingSoftware" class="input" readonly><label>Region</label><input id="settingRegion" class="input" readonly></div>
+      <div class="card setting"><label>Runtime IP</label><input id="settingVm" class="input" readonly><label>Memory</label><input id="settingMemory" class="input" readonly><label>Disk</label><input id="settingDisk" class="input" readonly><label>Status</label><input id="settingStatus" class="input" readonly></div>
+    </div>
+  </section>
+
+  <section id="account" class="page">
+    <div class="hero"><div><div class="eyebrow">Identity</div><h1>Account</h1><p>Your account is the verified Google identity used as the server owner ID.</p></div></div>
+    <div class="card setting"><label>Name</label><input id="accountNameLarge" class="input" readonly><label>Email</label><input id="accountEmailLarge" class="input" readonly><label>Google subject</label><input id="accountSub" class="input" readonly><div style="margin-top:14px"><button class="btn danger" onclick="signOut()">Sign out</button></div></div>
+  </section>
 </main>
 </div>
 
-<div id="createModal" class="modal"><div class="modalbox"><div class="modalhead"><h2>Create Minecraft server</h2><button class="btn" onclick="closeCreate()">×</button></div>
-<div class="createbody">
- <div class="formgrid"><label>Server name<input id="newName" placeholder="My Survival Server"></label><label>Region<select id="newRegion"><option value="asia-south1">India / Asia South 1</option><option value="asia-southeast1">Singapore</option><option value="us-central1">Iowa</option><option value="europe-west1">Belgium</option></select></label></div>
- <label>Server software <span id="runtimeCount" class="versioncount"></span><div id="runtimeGrid" class="runtimegrid"></div></label>
- <label>Minecraft version <div class="versionbox"><div class="versiontop"><input id="versionSearch" class="field" placeholder="Search version, e.g. 1.21.10" oninput="filterVersions()"><span id="versionCount" class="versioncount">Loading…</span></div><div id="versions" class="versions"><div class="empty">Choose software first.</div></div></div></label>
- <div class="formgrid"><label>Memory<select id="newMemory"><option value="2048">2 GB</option><option value="4096">4 GB</option><option value="8192">8 GB</option></select></label><label>Visibility<select id="newPublic"><option value="false">Private</option><option value="true">Public</option></select></label></div>
-</div><div class="modalfoot"><button class="btn" onclick="closeCreate()">Cancel</button><button class="btn primary" onclick="createServer()">Provision real server</button></div></div></div>
-<div id="toast" class="toast hide"></div>
+<div id="createModal" class="modal">
+  <div class="modalbox">
+    <div class="modalhead"><div><div class="eyebrow">Provisioning wizard</div><h2>Create a real server</h2></div><button class="btn" onclick="closeCreate()">Close</button></div>
+    <div class="steps"><div id="stepBar1" class="step active"></div><div id="stepBar2" class="step"></div><div id="stepBar3" class="step"></div><div id="stepBar4" class="step"></div><div id="stepBar5" class="step"></div></div>
+    <div class="createbody">
+      <div id="wiz1" class="wizard active"><div class="fieldwrap"><label>Server name</label><input id="newName" class="field" placeholder="My Survival Server" maxlength="50"></div><div class="fieldwrap" style="margin-top:12px"><label>Region</label><select id="newRegion" class="field"><option value="asia-south1">Mumbai / Asia South</option><option value="asia-southeast1">Singapore / Asia Southeast</option><option value="us-central1">Iowa / US Central</option><option value="europe-west1">Belgium / Europe West</option></select></div></div>
+      <div id="wiz2" class="wizard"><div class="eyebrow">Step 2</div><p style="color:var(--muted);font-size:10px">Choose the runtime family that will actually launch on the VM.</p><div id="runtimeGrid" class="runtimegrid"></div></div>
+      <div id="wiz3" class="wizard"><div class="eyebrow">Step 3</div><div class="versionbox"><div class="versiontop"><input id="versionSearch" class="field" placeholder="Search Minecraft versions…" oninput="filterVersions()"><span id="versionCount" style="color:#6d796f;font-size:8px">Loading…</span></div><div class="versionfilters"><select id="versionTypeFilter" class="field" onchange="filterVersions()"><option value="release">Releases</option><option value="all">All</option><option value="other">Snapshots / other</option></select><button class="btn" onclick="chooseLatest()">Latest release</button></div><div id="versions" class="versions"><div class="empty">Choose a runtime first.</div></div><div id="compatibility" style="font-size:9px;color:#718077;margin-top:9px">Compatibility information will appear from the live catalog.</div></div></div>
+      <div id="wiz4" class="wizard"><div class="eyebrow">Step 4</div><div class="formgrid"><div class="fieldwrap"><label>Memory</label><select id="newMemory" class="field"><option value="2048">2 GB</option><option value="4096">4 GB</option><option value="8192">8 GB</option><option value="12288">12 GB</option><option value="16384">16 GB</option></select></div><div class="fieldwrap"><label>Storage</label><select id="newDisk" class="field"><option value="20">20 GB</option><option value="40">40 GB</option><option value="80">80 GB</option><option value="160">160 GB</option><option value="320">320 GB</option></select></div><div class="fieldwrap"><label>Visibility</label><select id="newPublic" class="field"><option value="false">Private</option><option value="true">Public</option></select></div><div class="fieldwrap"><label>Region</label><select id="newRegion2" class="field" onchange="syncRegion()"><option value="asia-south1">Mumbai / Asia South</option><option value="asia-southeast1">Singapore / Asia Southeast</option><option value="us-central1">Iowa / US Central</option><option value="europe-west1">Belgium / Europe West</option></select></div></div></div>
+      <div id="wiz5" class="wizard"><div class="eyebrow">Review</div><div class="review"><div class="r"><span>Name</span><b id="reviewName">—</b></div><div class="r"><span>Software</span><b id="reviewSoftware">—</b></div><div class="r"><span>Version</span><b id="reviewVersion">—</b></div><div class="r"><span>Region</span><b id="reviewRegion">—</b></div><div class="r"><span>Memory</span><b id="reviewMemory">—</b></div><div class="r"><span>Storage</span><b id="reviewDisk">—</b></div></div><p style="font-size:10px;color:var(--muted);margin:13px 0 0">Creating the server provisions a real Compute Engine VM. There is no fake completion state.</p></div>
+    </div>
+    <div class="modalfoot"><button id="wizardBack" class="btn" onclick="wizardPrev()">Back</button><div style="display:flex;gap:7px"><button class="btn" onclick="closeCreate()">Cancel</button><button id="wizardNext" class="btn primary" onclick="wizardNext()">Next</button></div></div>
+  </div>
+</div>
+<div id="toast" class="toast" style="display:none"></div>
 
 <script>
 const $=id=>document.getElementById(id);
-const state={googleToken:sessionStorage.getItem('mineserver_google_token')||'',user:null,googleClientId:'',apiBase:(localStorage.getItem('mineserver_api_url')||document.querySelector('meta[name="mineserver-api-url"]')?.content||location.origin).replace(/\/$/,''),servers:[],selected:null,ws:null,runtimes:[],versions:{},runtime:null,version:null,type:'mod',path:''};
-function apiUrl(path){return state.apiBase+(path.startsWith('/')?path:'/'.concat(path))}
-function saveApiUrl(){}
-function showApiSetup(){}
-
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function toast(s){$('toast').textContent=s;$('toast').classList.remove('hide');clearTimeout(window._toast);window._toast=setTimeout(()=>$('toast').classList.add('hide'),2600)}
-function setLoginStatus(t,error=false){const e=$('loginStatus');if(e){e.textContent=t;e.style.color=error?'#ff8a8a':'#687269'}}
-function showLogin(message=''){$('loginGate').style.display='grid';if(message)setLoginStatus(message,true)}
-function hideLogin(){$('loginGate').style.display='none'}
-function googleCredential(resp){if(!resp?.credential)return;state.googleToken=resp.credential;sessionStorage.setItem('mineserver_google_token',resp.credential);finishLogin().catch(e=>{state.googleToken='';sessionStorage.removeItem('mineserver_google_token');showLogin(e.message||'Google sign-in failed')})}
+const state={token:sessionStorage.getItem('mineserver_google_token')||'',user:null,config:null,servers:[],selected:null,ws:null,wsReady:false,runtimes:[],versions:{},runtime:null,version:null,type:'mod',path:'',wizardStep:1};
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(msg){const e=$('toast');e.textContent=msg;e.style.display='block';clearTimeout(window._toastTimer);window._toastTimer=setTimeout(()=>e.style.display='none',2800)}
+function setLoginStatus(msg,error){const e=$('loginStatus');e.textContent=msg;e.style.color=error?'#ff9d9d':'#738078'}
+function showLogin(msg){$('loginGate').style.display='grid';if(msg)setLoginStatus(msg,true);$('loginRetry').classList.toggle('show',!!msg)}
+function hideLogin(){$('loginGate').style.display='none';$('loginRetry').classList.remove('show')}
+function clearSession(){state.token='';sessionStorage.removeItem('mineserver_google_token');if(state.ws)try{state.ws.close()}catch{}}
+function signOut(){clearSession();location.reload()}
+function apiPath(path){return path.startsWith('/')?path:'/'+path}
+async function api(path,options){
+  const headers=Object.assign({'Accept':'application/json'},options&&options.headers||{});
+  if(options&&options.body!=null)headers['Content-Type']='application/json';
+  if(state.token)headers.Authorization='Bearer '+state.token;
+  let response;
+  try{response=await fetch(apiPath(path),Object.assign({},options||{},{headers,credentials:'same-origin'}))}
+  catch(e){throw Error('Unable to connect to Mineserver.')}
+  const contentType=(response.headers.get('content-type')||'').toLowerCase();
+  let data=null;
+  if(contentType.includes('application/json')){
+    try{data=await response.json()}catch{throw Error('Mineserver returned invalid JSON.')}
+  }else{
+    const raw=await response.text();
+    if(raw.trimStart().startsWith('<'))throw Error('Unable to connect to Mineserver.');
+    throw Error('Mineserver returned an unexpected response.')
+  }
+  if(response.status===401){clearSession();showLogin(data&&data.detail||'Your Google session expired. Sign in again.');throw Error('Google sign-in required')}
+  if(!response.ok)throw Error(data&&data.detail||'Mineserver request failed.')
+  return data
+}
+function setPage(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$(p).classList.add('active');document.querySelectorAll('.nav button[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===p));$('crumb').textContent=p==='software'?'Software':p[0].toUpperCase()+p.slice(1);if(p==='console')connectConsole();if(p==='files')loadFiles(state.path);if(p==='players')renderPlayers();if(p==='networking')updateNetworking()}
+document.querySelectorAll('.nav button[data-page]').forEach(b=>b.onclick=()=>setPage(b.dataset.page));
+function googleCredential(response){if(!response||!response.credential)return;state.token=response.credential;sessionStorage.setItem('mineserver_google_token',state.token);finishLogin().catch(e=>{clearSession();showLogin(e.message||'Google sign-in failed')})}
 async function initGoogle(clientId){
-  state.googleClientId=clientId||localStorage.getItem('mineserver_google_client_id')||'';
-  if(!state.googleClientId){setLoginStatus('Google sign-in is not configured on the Mineserver server.',true);return false}
-  await new Promise((resolve,reject)=>{let n=0;const t=setInterval(()=>{if(window.google?.accounts?.id){clearInterval(t);resolve()}else if(++n>150){clearInterval(t);reject(Error('Google Identity Services did not load. Check the browser network/ad blocker.'))}},100)});
-  google.accounts.id.initialize({client_id:state.googleClientId,callback:googleCredential,auto_select:false,cancel_on_tap_outside:true});
-  const box=document.getElementById('googleButton');box.innerHTML='';
-  google.accounts.id.renderButton(box,{theme:'outline',size:'large',shape:'rectangular',text:'signin_with',width:330});
+  if(!clientId){$('configError').textContent='Google login is not configured by the Mineserver administrator.';$('configError').classList.add('show');setLoginStatus('Administrator configuration is required.',true);return false}
+  await new Promise((resolve,reject)=>{let n=0;const timer=setInterval(()=>{if(window.google&&google.accounts&&google.accounts.id){clearInterval(timer);resolve()}else if(++n>150){clearInterval(timer);reject(Error('Google Identity Services did not load.'))}},100)});
+  google.accounts.id.initialize({client_id:clientId,callback:googleCredential,auto_select:false,cancel_on_tap_outside:true});
+  $('googleButton').innerHTML='';
+  google.accounts.id.renderButton($('googleButton'),{theme:'outline',size:'large',shape:'rectangular',text:'signin_with',width:360});
   return true
 }
-async function finishLogin(){if(!state.googleToken)throw Error('Google sign-in required');const d=await api('/api/auth/check',{method:'POST'});state.user=d.user||null;$('accountName').textContent=state.user?.name||'Google account';$('accountEmail').textContent=state.user?.email||'Signed in';hideLogin();await loadServers();await loadRuntimes()}
-function signOut(){sessionStorage.removeItem('mineserver_google_token');state.googleToken='';if(state.ws)try{state.ws.close()}catch{}location.reload()}
-async function api(path,opt={}){if(!state.apiBase)throw Error('Mineserver control-plane URL is not configured');const headers=Object.assign({'Content-Type':'application/json'},opt.headers||{});if(state.googleToken)headers.Authorization='Bearer '+state.googleToken;const r=await fetch(apiUrl(path),{...opt,headers});const ct=r.headers.get('content-type')||'';let d=null;if(ct.includes('application/json')){try{d=await r.json()}catch{}}else{const raw=await r.text();if(raw.trimStart().startsWith('<!doctype')||raw.trimStart().startsWith('<html'))throw Error('Mineserver API URL points to a web page, not the backend. Set the Cloud Run control-plane URL.');throw Error('Mineserver API returned a non-JSON response.')}if(r.status===401){showLogin('Your Google session expired. Please sign in again.');throw Error(d?.detail||'Google sign-in required')}if(!r.ok)throw Error(d?.detail||d?.message||'Request failed');return d}
-document.querySelectorAll('.nav button[data-page]').forEach(b=>b.onclick=()=>go(b.dataset.page));
-function go(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$(p).classList.add('active');$('crumb').textContent=p==='software'?'Software & Mods':p[0].toUpperCase()+p.slice(1);if(p==='console')connectConsole();if(p==='files')loadFiles(state.path);if(p==='players')renderPlayers()}
-function openCreate(){$('createModal').classList.add('show');loadRuntimes()}
-function closeCreate(){$('createModal').classList.remove('show')}
-async function loadRuntimes(){try{const d=await api('/api/catalog/runtimes');state.runtimes=d.runtimes||[];$('runtimeCount').textContent=state.runtimes.length+' runtime families';$('runtimeGrid').innerHTML=state.runtimes.map((r,i)=>'<button class="runtime '+(i===0?'selected':'')+'" data-runtime="'+esc(r.id)+'" onclick="selectRuntime(\''+esc(r.id)+'\')"><b>'+esc(r.name)+'</b><small>'+esc(r.description||'')+'</small></button>').join('');if(state.runtimes.length)selectRuntime(state.runtime||state.runtimes[0].id)}catch(e){toast(e.message)}}
-async function selectRuntime(id){
-  state.runtime=id;
-  document.querySelectorAll('.runtime').forEach(b=>b.classList.toggle('selected',b.dataset.runtime===id));
-  $('versions').innerHTML='<div class="empty">Loading live versions…</div>';
-  $('versionCount').textContent='Loading…';
-  try{
-    const d=await api('/api/catalog/versions?runtime='+encodeURIComponent(id));
-    state.versions[id]=d.versions?.[id]||[];
-    renderVersions();
-  }catch(e){
-    $('versionCount').textContent='Unavailable';
-    $('versions').innerHTML='<div class="empty"><b>Version catalog unavailable</b><br>'+esc(e.message)+'<br><button class="btn primary" style="margin-top:8px" onclick="selectRuntime(\''+esc(id)+'\')">Retry</button></div>';
-  }
+async function finishLogin(){
+  if(!state.token)throw Error('Sign in with Google is required.');
+  const data=await api('/api/auth/check',{method:'POST'});
+  state.user=data.user||null;
+  setAccount();
+  hideLogin();
+  await Promise.all([loadServers(),loadRuntimes()]);
 }
+function setAccount(){
+  const u=state.user||{};
+  $('accountName').textContent=u.name||'Google user';
+  $('accountEmail').textContent=u.email||'Signed in';
+  $('accountNameLarge').value=u.name||'';
+  $('accountEmailLarge').value=u.email||'';
+  $('accountSub').value=u.id||'';
+  if(u.picture){$('accountAvatar').src=u.picture;$('accountAvatar').classList.remove('hide')}else{$('accountAvatar').classList.add('hide')}
+}
+async function loadRuntimes(){
+  try{const data=await api('/api/catalog/runtimes');state.runtimes=data.runtimes||[]}
+  catch(e){toast(e.message)}
+}
+function openCreate(){if(!state.runtimes.length)loadRuntimes();state.wizardStep=1;state.runtime=null;state.version=null;$('createModal').classList.add('show');renderWizard();renderRuntimes()}
+function closeCreate(){$('createModal').classList.remove('show')}
+function renderWizard(){for(let i=1;i<=5;i++){$('wiz'+i).classList.toggle('active',i===state.wizardStep);$('stepBar'+i).className='step '+(i<state.wizardStep?'done ':i===state.wizardStep?'active ':'')}$('wizardBack').style.visibility=state.wizardStep===1?'hidden':'visible';$('wizardNext').textContent=state.wizardStep===5?'Create server':'Next';if(state.wizardStep===5)updateReview()}
+function renderRuntimes(){
+  $('runtimeGrid').innerHTML=state.runtimes.length?state.runtimes.map(r=>'<button class="runtime '+(r.id===state.runtime?'selected':'')+'" onclick="selectRuntime(\''+esc(r.id)+'\')"><b>'+esc(r.name)+'</b><small>'+esc(r.description||'')+'</small></button>').join(''):'<div class="empty"><b>No runtime catalog</b>Retry the control plane.</div>'
+}
+async function selectRuntime(id){
+  state.runtime=id;state.version=null;renderRuntimes();$('versions').innerHTML='<div class="empty"><b>Loading live versions…</b>Querying the authoritative provider.</div>';$('versionCount').textContent='Loading…';
+  try{const data=await api('/api/catalog/versions?runtime='+encodeURIComponent(id));state.versions[id]=data.versions&&data.versions[id]||[];renderVersions()}catch(e){$('versions').innerHTML='<div class="empty"><b>Version catalog unavailable</b>'+esc(e.message)+'<br><button class="btn primary" style="margin-top:9px" onclick="selectRuntime(\''+esc(id)+'\')">Retry</button></div>';$('versionCount').textContent='Unavailable'}
+}
+function chooseLatest(){const list=state.versions[state.runtime]||[];const v=list.find(x=>x.type==='release')||list[0];if(v){state.version=v.id;filterVersions()}}
 function renderVersions(){
   const list=state.versions[state.runtime]||[];
-  if(state.runtime==='mineserver'){
-    state.version='bundled';
-    $('versionSearch').value='';
-    $('versionSearch').placeholder='Native Mineserver build';
-    $('versionCount').textContent='Built-in server core';
-    $('versions').innerHTML='<button class="version selected" type="button">Mineserver native</button>';
-    return;
-  }
-  $('versionSearch').placeholder='Search Minecraft version…';
-  $('versionCount').textContent=list.length+' published versions';
-  state.version=state.version&&list.some(v=>v.id===state.version)?state.version:(list[0]?.id||null);
+  if(!list.length){$('versionCount').textContent='0 versions';$('versions').innerHTML='<div class="empty"><b>No published versions</b>This runtime has no compatible build in the live catalog.</div>';return}
+  const release=list.find(x=>x.type==='release');state.version=(state.version&&list.some(x=>x.id===state.version))?state.version:(release?release.id:list[0].id);
+  const family=state.runtimes.find(x=>x.id===state.runtime);$('compatibility').textContent=(family?family.name:'Runtime')+' · '+list.length+' live published versions · latest selectable version is '+state.version;
   filterVersions()
 }
-function filterVersions(){const q=($('versionSearch').value||'').toLowerCase();const list=state.versions[state.runtime]||[];const out=list.filter(v=>String(v.id).toLowerCase().includes(q)).slice(0,160);$('versions').innerHTML=out.map(v=>'<button class="version '+(v.id===state.version?'selected':'')+'" onclick="chooseVersion(\''+esc(v.id)+'\')">'+esc(v.id)+(v.type&&v.type!=='release'?' · '+esc(v.type):'')+'</button>').join('')||'<div class="empty">No matching versions.</div>'}
+function filterVersions(){
+  const q=($('versionSearch').value||'').toLowerCase(),kind=$('versionTypeFilter').value,list=state.versions[state.runtime]||[];
+  const out=list.filter(v=>String(v.id).toLowerCase().includes(q)&&(kind==='all'||(kind==='release'?v.type==='release':v.type!=='release'))).slice(0,180);
+  $('versionCount').textContent=out.length+' shown / '+list.length;
+  $('versions').innerHTML=out.map(v=>'<button class="version '+(v.id===state.version?'selected':'')+'" onclick="chooseVersion(\''+esc(v.id)+'\')">'+esc(v.id)+(v.type&&v.type!=='release'?' · '+esc(v.type):'')+'</button>').join('')||'<div class="empty">No matching versions.</div>'
+}
 function chooseVersion(v){state.version=v;filterVersions()}
-async function loadServers(){try{const d=await api('/api/servers');state.servers=d.servers||[];$('serverTotal').textContent=state.servers.length+' server'+(state.servers.length===1?'':'s');renderServers();if(!state.selected&&state.servers[0])selectServer(state.servers[0].id);else if(state.selected&&!state.servers.some(s=>s.id===state.selected))state.selected=null;if(!state.selected)clearSelected()}catch(e){toast(e.message)}}
-function renderServers(){$('serverList').innerHTML=state.servers.length?state.servers.map(s=>'<div class="server '+(s.id===state.selected?'selected':'')+'" onclick="selectServer(\''+esc(s.id)+'\')"><div class="servericon">⛏</div><div><h3>'+esc(s.name)+'</h3><p>'+esc(s.software)+' · Minecraft '+esc(s.mc_version)+' · '+esc(s.region)+'</p><div class="status '+(s.status==='online'?'':'offline')+'">● '+esc(s.status||'unknown')+'</div></div><div class="serverright"><b>'+Number(s.players_online||0)+' / '+Number(s.max_players||0)+'</b><small>players</small></div></div>').join(''):'<div class="empty"><b>No servers yet</b>Create one to provision a real runtime.</div>'}
+function syncRegion(){$('newRegion').value=$('newRegion2').value}
+function wizardPrev(){if(state.wizardStep>1){state.wizardStep--;renderWizard()}}
+function wizardNext(){
+  if(state.wizardStep===1){if(!$('newName').value.trim())return toast('Enter a server name');syncRegion()}
+  if(state.wizardStep===2&&!state.runtime)return toast('Choose Minecraft software');
+  if(state.wizardStep===3&&!state.version)return toast('Choose a compatible Minecraft version');
+  if(state.wizardStep===4){syncRegion()}
+  if(state.wizardStep<5){state.wizardStep++;renderWizard()}else createServer()
+}
+function updateReview(){
+  const runtime=state.runtimes.find(x=>x.id===state.runtime);
+  $('reviewName').textContent=$('newName').value.trim()||'—';
+  $('reviewSoftware').textContent=runtime?runtime.name:'—';
+  $('reviewVersion').textContent=state.version||'—';
+  $('reviewRegion').textContent=$('newRegion').value||'—';
+  $('reviewMemory').textContent=(Number($('newMemory').value)||0)/1024+' GB';
+  $('reviewDisk').textContent=($('newDisk').value||'—')+' GB';
+}
+async function createServer(){
+  const body={name:$('newName').value.trim(),region:$('newRegion').value,software:state.runtime,mc_version:state.version,memory_mb:Number($('newMemory').value),disk_gb:Number($('newDisk').value),public:$('newPublic').value==='true'};
+  closeCreate();toast('Provisioning a real Compute Engine server…');
+  try{const d=await api('/api/servers',{method:'POST',body:JSON.stringify(body)});state.servers.push(d.server);state.selected=d.server.id;renderServers();selectServer(d.server.id);toast('Server provisioned. Waiting for the runtime agent.')}catch(e){toast(e.message)}
+}
+async function loadServers(){
+  try{
+    const data=await api('/api/servers');state.servers=data.servers||[];$('serverTotal').textContent=state.servers.length+' server'+(state.servers.length===1?'':'s');
+    if(state.selected&&!state.servers.some(s=>s.id===state.selected))state.selected=null;
+    if(!state.selected&&state.servers[0])state.selected=state.servers[0].id;
+    renderServers();
+    if(state.selected){const s=current();updateSelected(s);await refreshStats();renderPlayers()}else clearSelected()
+  }catch(e){toast(e.message)}
+}
 function current(){return state.servers.find(s=>s.id===state.selected)}
-async function selectServer(id){state.selected=id;const s=current();if(!s)return;renderServers();updateSelected(s);connectConsole();await refreshStats();renderPlayers()}
-function updateSelected(s){$('selectedName').textContent=s.name;$('selectedMeta').textContent=s.software+' · Minecraft '+s.mc_version;$('consoleMeta').textContent=s.name+' · '+s.software+' '+s.mc_version;$('consoleTitle').textContent=s.name;$('settingName').value=s.name;$('settingVersion').value=s.mc_version;$('settingSoftware').value=s.software;$('settingRegion').value=s.region||'—';$('settingVm').value=s.public_ip||'—';$('settingMemory').value=(s.memory_mb||0)+' MB';$('selectedStatus').textContent='● '+(s.status||'unknown');$('selectedStatus').style.color=s.status==='online'?'var(--green)':'#687269';$('address').textContent=s.game_address||'Waiting for runtime…'}
-function clearSelected(){$('selectedName').textContent='No server selected';$('selectedMeta').textContent='Create a server to begin';$('selectedStatus').textContent='● offline';$('address').textContent='—';$('miniConsole').innerHTML='<div class="empty"><b>Waiting for runtime</b>Select a server to stream its actual output.</div>'}
-async function refreshStats(){if(!state.selected)return;try{const d=await api('/api/servers/'+state.selected+'/stats'),s=current();if(s)Object.assign(s,{status:d.status,players_online:d.players_online,max_players:d.max_players,players:d.players||[],metrics:d.metrics});updateStats(d);renderServers();renderPlayers()}catch{}}
-function updateStats(d){const m=d.metrics||{},cpu=Number(m.cpu||0),ram=m.ram_total_mb?Number(m.ram_used_mb)/Number(m.ram_total_mb)*100:0,disk=m.disk_total_gb?Number(m.disk_used_gb)/Number(m.disk_total_gb)*100:0,pl=d.max_players?Number(d.players_online)/Number(d.max_players)*100:0;$('cpu').textContent=cpu.toFixed(0)+'%';$('ram').textContent=m.ram_total_mb?m.ram_used_mb+' / '+m.ram_total_mb+' MB':'—';$('disk').textContent=m.disk_total_gb?m.disk_used_gb+' / '+m.disk_total_gb+' GB':'—';$('players').textContent=(d.players_online??0)+' / '+(d.max_players??0);$('cpuBar').style.width=Math.min(100,cpu)+'%';$('ramBar').style.width=Math.min(100,ram)+'%';$('diskBar').style.width=Math.min(100,disk)+'%';$('playerBar').style.width=Math.min(100,pl)+'%'}
-function connectConsole(){if(!state.selected)return;if(state.ws)try{state.ws.close()}catch{}const base=new URL(state.apiBase);const proto=base.protocol==='https:'?'wss':'ws';state.ws=new WebSocket(proto+'://'+base.host+'/api/servers/'+state.selected+'/console');$('socketLabel').textContent='connecting';$('socketMini').textContent='connecting';state.ws.onopen=()=>{state.ws.send(JSON.stringify({type:'auth',token:state.googleToken}));$('socketLabel').textContent='authenticating';$('socketMini').textContent='authenticating'};state.ws.onclose=()=>{$('socketLabel').textContent='offline';$('socketMini').textContent='offline'};state.ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='log'){appendLog(m.line);miniLog(m.line)}if(m.type==='metrics'){updateStats({metrics:m.data,players_online:m.data.players_online||0,max_players:m.data.max_players||20});const s=current();if(s){s.players=m.data.players||[];s.players_online=m.data.players_online||0;s.max_players=m.data.max_players||20;renderServers();renderPlayers()}}if(m.type==='error')appendLog('[ERROR] '+m.message,'err');if(m.type==='files')handleFiles(m)}}
-function appendLog(t,k=''){if($('consoleOutput').querySelector('.empty'))$('consoleOutput').innerHTML='';const d=document.createElement('div');d.className='line '+k;d.textContent='['+new Date().toLocaleTimeString()+'] '+t;$('consoleOutput').appendChild(d);$('consoleOutput').scrollTop=$('consoleOutput').scrollHeight}
-function miniLog(t){if($('miniConsole').querySelector('.empty'))$('miniConsole').innerHTML='';const d=document.createElement('div');d.className='line';d.textContent=t;$('miniConsole').appendChild(d);while($('miniConsole').children.length>80)$('miniConsole').firstChild.remove()}
-function sendCommand(){const v=$('command').value.trim();if(!v)return;if(!state.ws||state.ws.readyState!==1)return toast('Console is offline');state.ws.send(JSON.stringify({type:'command',command:v}));appendLog('> '+v,'ok');$('command').value=''}
-async function power(a){if(!state.selected)return toast('Select a server first');try{await api('/api/servers/'+state.selected+'/power/'+a,{method:'POST'});toast(a+' requested');setTimeout(refreshStats,700);setTimeout(refreshStats,3000)}catch(e){toast(e.message)}}
-function copyAddress(){const x=$('address').textContent;if(x&&x!=='—')navigator.clipboard.writeText(x).then(()=>toast('Address copied'))}
-function setType(t,b){state.type=t;document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active')}
-async function searchCatalog(){if(!state.selected)return toast('Select a server first');const q=encodeURIComponent($('catalogQuery').value),p=$('catalogProvider').value,l=$('catalogLoader').value;$('catalogList').innerHTML='<div class="empty">Searching live provider…</div>';try{const d=await api('/api/catalog/search?q='+q+'&provider='+p+'&mc='+encodeURIComponent(current().mc_version)+'&loader='+l+'&type='+state.type);$('catalogList').innerHTML=(d.items||[]).map(x=>'<div class="project"><div class="projecticon">◇</div><div><h3>'+esc(x.name)+'</h3><p>'+esc(x.description||'No description')+'</p></div><button class="btn primary" onclick="installProject(\''+esc(x.provider)+'\',\''+esc(x.id)+'\')">Install</button></div>').join('')||'<div class="empty">No compatible projects found.</div>'}catch(e){$('catalogList').innerHTML='<div class="empty"><b>Provider error</b>'+esc(e.message)+'</div>'}}
-async function installProject(provider,id){try{await api('/api/servers/'+state.selected+'/install',{method:'POST',body:JSON.stringify({provider,project_id:id,loader:$('catalogLoader').value,type:state.type})});toast('Install queued on real runtime')}catch(e){toast(e.message)}}
-function loadFiles(path=''){state.path=path;$('filePath').textContent='/'+path;$('fileList').innerHTML='<div class="empty">Waiting for runtime…</div>';if(state.ws?.readyState===1)state.ws.send(JSON.stringify({type:'files_list',path}))}
-function handleFiles(m){if(m.action==='list'){$('filePath').textContent='/'+(m.path||'');$('fileList').innerHTML=(m.path?'<div class="frow" onclick="loadFiles(parentPath())">↩ ..</div>':'')+(m.items||[]).map(x=>'<div class="frow" onclick="'+(x.directory?'loadFiles(\''+esc(x.path)+'\')':canEdit(x.name)?'readFile(\''+esc(x.path)+'\')':'')+'">'+(x.directory?'▤ ':'▧ ')+esc(x.name)+'</div>').join('')||'<div class="empty">Empty directory.</div>'}if(m.action==='read'){$('editorName').textContent=m.path;$('editorText').value=m.content;window.editingPath=m.path}if(m.action==='saved'){toast('File saved');loadFiles(state.path)}if(m.action==='error')toast(m.message)}
+function renderServers(){$('serverList').innerHTML=state.servers.length?state.servers.map(s=>'<div class="server '+(s.id===state.selected?'selected':'')+'" onclick="selectServer(\''+esc(s.id)+'\')"><div class="servericon">⛏</div><div><h3>'+esc(s.name)+'</h3><p>'+esc(s.software)+' · Minecraft '+esc(s.mc_version)+' · '+esc(s.region)+'</p><div class="status '+(s.status==='online'?'':'offline')+'">● '+esc(s.status||'unknown')+'</div></div><div class="serverright"><b>'+Number(s.players_online||0)+' / '+Number(s.max_players||0)+'</b><small>players</small></div></div>').join(''):'<div class="empty"><b>No servers</b>Create a real server to get started.</div>'}
+async function selectServer(id){state.selected=id;const s=current();if(!s)return;renderServers();updateSelected(s);connectConsole();await refreshStats();renderPlayers();if($('files').classList.contains('active'))loadFiles(state.path);if($('networking').classList.contains('active'))updateNetworking()}
+function updateSelected(s){if(!s)return;$('selectedName').textContent=s.name;$('selectedMeta').textContent=s.software+' · Minecraft '+s.mc_version;$('consoleMeta').textContent=s.name+' · '+s.software+' '+s.mc_version;$('consoleTitle').textContent=s.name;$('settingName').value=s.name;$('settingVersion').value=s.mc_version;$('settingSoftware').value=s.software;$('settingRegion').value=s.region||'—';$('settingVm').value=s.public_ip||'—';$('settingMemory').value=s.memory_mb?s.memory_mb+' MB':'—';$('settingDisk').value=s.disk_gb?s.disk_gb+' GB':'—';$('settingStatus').value=s.status||'unknown';$('selectedStatus').textContent='● '+(s.status||'unknown');$('selectedStatus').style.color=s.status==='online'?'var(--green)':'#727e75';$('address').textContent=s.game_address||'Waiting for runtime…';updateNetworking()}
+function clearSelected(){$('selectedName').textContent='No server selected';$('selectedMeta').textContent='Create a server to begin';$('selectedStatus').textContent='● offline';$('address').textContent='—';$('miniConsole').innerHTML='<div class="empty"><b>Waiting for runtime</b>Select a server to stream actual output.</div>';$('networkAddress').value='—';$('networkVisibility').value='—'}
+function updateNetworking(){const s=current();$('networkAddress').value=s&&s.game_address||'—';$('networkVisibility').value=s?(s.public?'Public':'Private'):'—'}
+async function refreshStats(){if(!state.selected)return;try{const d=await api('/api/servers/'+state.selected+'/stats'),s=current();if(s)Object.assign(s,{status:d.status,players_online:d.players_online,max_players:d.max_players,players:d.players||[],metrics:d.metrics,game_address:d.game_address});if(s)updateSelected(s);updateStats(d);renderServers();renderPlayers()}catch(e){}}
+function updateStats(d){const m=d.metrics||{},cpu=Number(m.cpu||0),ram=m.ram_total_mb?Number(m.ram_used_mb)/Number(m.ram_total_mb)*100:0,disk=m.disk_total_gb?Number(m.disk_used_gb)/Number(m.disk_total_gb)*100:0,pl=d.max_players?Number(d.players_online||0)/Number(d.max_players)*100:0;$('cpu').textContent=m.cpu!=null?cpu.toFixed(0)+'%':'—';$('ram').textContent=m.ram_total_mb?m.ram_used_mb+' / '+m.ram_total_mb+' MB':'—';$('disk').textContent=m.disk_total_gb?m.disk_used_gb+' / '+m.disk_total_gb+' GB':'—';$('players').textContent=d.max_players!=null?(d.players_online||0)+' / '+d.max_players:'—';$('cpuBar').style.width=Math.min(100,cpu)+'%';$('ramBar').style.width=Math.min(100,ram)+'%';$('diskBar').style.width=Math.min(100,disk)+'%';$('playerBar').style.width=Math.min(100,pl)+'%'}
+function connectConsole(){
+  if(!state.selected)return;
+  if(state.ws)try{state.ws.close()}catch{}
+  state.wsReady=false;
+  const wsScheme=location.protocol==='https:'?'wss':'ws';
+  state.ws=new WebSocket(wsScheme+'://'+location.host+'/api/servers/'+encodeURIComponent(state.selected)+'/console');
+  $('socketLabel').textContent='connecting';$('socketMini').textContent='connecting';
+  state.ws.onopen=()=>{state.wsReady=true;state.ws.send(JSON.stringify({type:'auth',token:state.token}));$('socketLabel').textContent='connected';$('socketMini').textContent='connected';if($('files').classList.contains('active'))setTimeout(()=>loadFiles(state.path),120)};
+  state.ws.onclose=()=>{state.wsReady=false;$('socketLabel').textContent='offline';$('socketMini').textContent='offline';if(state.selected)setTimeout(()=>{if(state.selected&&!state.wsReady)connectConsole()},3000)};
+  state.ws.onerror=()=>{state.wsReady=false};
+  state.ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='log'){appendLog(m.line,m.level||'');miniLog(m.line)}if(m.type==='metrics'){updateStats({metrics:m.data,players_online:m.data.players_online||0,max_players:m.data.max_players||20});const s=current();if(s){s.players=m.data.players||[];s.players_online=m.data.players_online||0;s.max_players=m.data.max_players||20;s.status=m.data.minecraft_running?'online':'offline';renderServers();renderPlayers();updateSelected(s)}}if(m.type==='players'){const s=current();if(s){s.players=m.players||[];s.players_online=m.count||0;s.max_players=m.max_players||20;renderPlayers();renderServers()}}if(m.type==='runtime'){const s=current();if(s){s.status=m.status||s.status;renderServers();updateSelected(s)}}if(m.type==='install'){if(m.status==='error')toast('Install failed: '+m.message);else if(m.status==='installed')toast(m.name+' installed successfully on the runtime');}if(m.type==='files')handleFiles(m);if(m.type==='error')appendLog('[ERROR] '+m.message,'error')}}
+}
+function appendLog(text,kind){if($('consoleOutput').querySelector('.empty'))$('consoleOutput').innerHTML='';const d=document.createElement('div');d.className='line';d.style.color=kind==='error'?'#ff8f8f':kind==='ok'?'#8fe4a1':'';d.textContent='['+new Date().toLocaleTimeString()+'] '+text;$('consoleOutput').appendChild(d);$('consoleOutput').scrollTop=$('consoleOutput').scrollHeight}
+function miniLog(text){if($('miniConsole').querySelector('.empty'))$('miniConsole').innerHTML='';const d=document.createElement('div');d.className='line';d.textContent=text;$('miniConsole').appendChild(d);while($('miniConsole').children.length>90)$('miniConsole').firstChild.remove();$('miniConsole').scrollTop=$('miniConsole').scrollHeight}
+function sendCommand(){const v=$('command').value.trim();if(!v)return;if(!state.wsReady)return toast('Console is offline');state.ws.send(JSON.stringify({type:'command',command:v}));appendLog('> '+v,'ok');$('command').value=''}
+async function power(action){if(!state.selected)return toast('Select a server first');try{await api('/api/servers/'+state.selected+'/power/'+action,{method:'POST'});toast(action+' requested');setTimeout(refreshStats,800);setTimeout(refreshStats,3500)}catch(e){toast(e.message)}}
+function copyAddress(){const x=$('address').textContent;if(!x||x==='—'||x==='Waiting for runtime…')return toast('No live server address yet');navigator.clipboard.writeText(x).then(()=>toast('Address copied')).catch(()=>toast(x))}
+function setType(type,button){state.type=type;document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));button.classList.add('active')}
+async function searchCatalog(){
+  const s=current();if(!s)return toast('Select a server first');
+  const q=encodeURIComponent($('catalogQuery').value||''),provider=$('catalogProvider').value,loader=$('catalogLoader').value;
+  $('catalogList').innerHTML='<div class="empty"><b>Searching live provider…</b></div>';
+  try{const d=await api('/api/catalog/search?q='+q+'&provider='+provider+'&mc='+encodeURIComponent(s.mc_version)+'&loader='+encodeURIComponent(loader)+'&type='+state.type);$('catalogList').innerHTML=(d.items||[]).map(x=>'<div class="project"><div class="projecticon">◇</div><div><h3>'+esc(x.name)+'</h3><p>'+esc(x.description||'No description')+'</p></div><button class="btn primary" onclick="installProject(\''+esc(x.provider)+'\',\''+esc(x.id)+'\')">Install</button></div>').join('')||'<div class="empty"><b>No compatible projects</b>The provider returned no matching result.</div>'}catch(e){$('catalogList').innerHTML='<div class="empty"><b>Provider error</b>'+esc(e.message)+'</div>'}
+}
+async function installProject(provider,id){try{await api('/api/servers/'+state.selected+'/install',{method:'POST',body:JSON.stringify({provider:provider,project_id:id,loader:$('catalogLoader').value,type:state.type})});toast('Install queued for the real runtime')}catch(e){toast(e.message)}}
+function loadFiles(path){state.path=path||'';$('filePath').textContent='/'+state.path;$('fileList').innerHTML='<div class="empty"><b>Loading</b>Reading the real filesystem.</div>';if(!state.wsReady){connectConsole();setTimeout(()=>{if(state.wsReady)state.ws.send(JSON.stringify({type:'files_list',path:state.path}))},250)}else state.ws.send(JSON.stringify({type:'files_list',path:state.path}))}
+function handleFiles(m){if(m.action==='list'){$('filePath').textContent='/'+(m.path||state.path);$('fileList').innerHTML=(m.path?'<div class="frow" onclick="loadFiles(parentPath())">↩ ..</div>':'')+(m.items||[]).map(x=>'<div class="frow" onclick="'+(x.directory?'loadFiles(\''+esc(x.path)+'\')':isEditable(x.name)?'readFile(\''+esc(x.path)+'\')':'')+'">'+(x.directory?'▤ ':'▧ ')+esc(x.name)+(x.size!=null?' · '+x.size+' B':'')+'</div>').join('')||'<div class="empty">Empty directory.</div>'}if(m.action==='read'){$('editorName').textContent=m.path;$('editorText').value=m.content;window.editingPath=m.path}if(m.action==='saved'){toast('File saved');loadFiles(state.path)}if(m.action==='error')toast(m.message)}
 function parentPath(){return state.path.split('/').slice(0,-1).join('/')}
-function canEdit(n){return ['server.properties','eula.txt','whitelist.json','ops.json','banned-players.json','banned-ips.json'].includes(n)||/\.(yml|yaml|json|properties|txt)$/.test(n)}
-function readFile(p){state.ws?.send(JSON.stringify({type:'file_read',path:p}))}
-function saveFile(){if(window.editingPath&&state.ws?.readyState===1)state.ws.send(JSON.stringify({type:'file_write',path:window.editingPath,content:$('editorText').value}))}
+function isEditable(name){return ['server.properties','eula.txt','whitelist.json','ops.json','banned-players.json','banned-ips.json'].includes(name)||/\.(yml|yaml|json|properties|txt)$/i.test(name)}
+function readFile(path){if(state.wsReady)state.ws.send(JSON.stringify({type:'file_read',path:path}));else toast('Runtime filesystem is offline')}
+function saveFile(){if(!window.editingPath)return toast('No editable file selected');if(!state.wsReady)return toast('Runtime filesystem is offline');state.ws.send(JSON.stringify({type:'file_write',path:window.editingPath,content:$('editorText').value}))}
 function renderPlayers(){const s=current();if(!s){$('playerCount').textContent='—';$('capacityNumber').textContent='—';$('playerList').innerHTML='<div class="empty"><b>No server selected</b></div>';return}const p=s.players||[];$('playerCount').textContent=(s.players_online||0)+' / '+(s.max_players||0);$('capacityNumber').textContent=(s.players_online||0)+' / '+(s.max_players||0);$('playerList').innerHTML=p.length?p.map(n=>'<div class="prow"><div class="skin"></div><b>'+esc(n)+'</b><span>online now</span></div>').join(''):'<div class="empty"><b>No players online</b>No placeholder players are generated.</div>'}
-async function createServer(){const name=$('newName').value.trim();if(!name)return toast('Enter a server name');if(!state.runtime||!state.version)return toast('Choose software and Minecraft version');try{closeCreate();toast('Provisioning real server…');const d=await api('/api/servers',{method:'POST',body:JSON.stringify({name,region:$('newRegion').value,software:state.runtime,mc_version:state.version,memory_mb:Number($('newMemory').value),public:$('newPublic').value==='true'})});state.servers.push(d.server);state.selected=d.server.id;renderServers();await selectServer(d.server.id);toast('Server created; waiting for runtime')}catch(e){toast(e.message)}}
 async function refreshAll(){await loadServers();if(state.selected)await refreshStats();toast('Live data refreshed')}
 async function boot(){
+  $('configError').classList.remove('show');setLoginStatus('Checking Mineserver…');$('loginRetry').classList.remove('show');
   try{
-
-    const r=await fetch(apiUrl('/api/config'),{headers:{'Accept':'application/json'}});
-    const ct=r.headers.get('content-type')||'';
-    if(!ct.includes('application/json')){
-      const raw=await r.text();
-      throw Error(raw.trimStart().startsWith('<')?'The API URL points to the web page, not FastAPI. Use the Cloud Run control-plane URL.':'Mineserver API returned a non-JSON response.')
-    }
-    if(!r.ok)throw Error('Mineserver API returned HTTP '+r.status)
-    const cfg=await r.json();
-    const ready=await initGoogle(cfg.google_client_id);
-    if(!ready)return;
-    if(state.googleToken){
-      try{await finishLogin()}catch(e){sessionStorage.removeItem('mineserver_google_token');state.googleToken='';showLogin(e.message||'Please sign in with Google')}
-    }else setLoginStatus('Sign in with Google to load your servers.')
-  }catch(e){showApiSetup();showLogin(e.message||'Unable to connect to Mineserver')}
-
+    const r=await fetch('/api/config',{headers:{Accept:'application/json'},credentials:'same-origin'});
+    const ct=(r.headers.get('content-type')||'').toLowerCase();
+    if(!ct.includes('application/json')){const raw=await r.text();throw Error(raw.trimStart().startsWith('<')?'Unable to connect to Mineserver.':'Mineserver returned an unexpected response.')}
+    const cfg=await r.json();if(!r.ok)throw Error(cfg.detail||'Mineserver configuration request failed.');
+    state.config=cfg;
+    if(!cfg.google_configured){$('configError').textContent='Google login is not configured by the Mineserver administrator.';$('configError').classList.add('show');setLoginStatus('Administrator configuration is required.',true);$('loginRetry').classList.add('show');return}
+    await initGoogle(cfg.google_client_id);
+    if(state.token){try{await finishLogin()}catch(e){clearSession();showLogin(e.message||'Sign in with Google to continue.')}}else setLoginStatus('Sign in with Google to continue.')
+  }catch(e){showLogin('Unable to connect to Mineserver.');$('configError').textContent=e.message||'Unable to connect to Mineserver.';$('configError').classList.add('show')}
 }
 boot();
 </script>
