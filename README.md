@@ -80,7 +80,13 @@ The installer should:
 
 ## Development
 
-This repository currently contains a static frontend prototype. Replace the demo functions in `index.html` with calls to the production API described above.
+Run the real FastAPI control plane locally:
+
+- Windows PowerShell: `./scripts/run-local.ps1`
+- Linux/macOS: `./scripts/run-local.sh`
+- Open `http://127.0.0.1:8080`
+
+The local process is the actual API/UI; it does not create fake servers or fake players. Creating a Minecraft runtime still requires the configured Google Compute Engine credentials because the real game process runs on a VM.
 
 ## Architecture direction — Pumpkin-inspired, web-based
 
