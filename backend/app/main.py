@@ -269,7 +269,7 @@ async def catalog(
 async def install(sid,body:InstallRequest,u=Depends(user)):
     s=store.get_server(sid);owns(s,u)
     if body.provider=="modrinth":
-        v=await modrinth_version(s["id"] and body.project_id,s["mc_version"],body.loader)
+        v=await modrinth_version(body.project_id,s["mc_version"],body.loader)
         f=next((x for x in v.get("files",[]) if x.get("primary")),v.get("files",[None])[0])
         if not f:
             raise HTTPException(404,"No compatible download")
