@@ -2,7 +2,7 @@ from __future__ import annotations
 import asyncio,json,re,shutil,time,urllib.request,subprocess,zipfile,hashlib,tempfile,os
 from pathlib import Path
 import psutil,websockets
-ROOT=Path("/opt/minehub");SERVER=ROOT/"server";C=json.loads((ROOT/"config.json").read_text());BASE=C["control_url"].rstrip("/").replace("https://","wss://").replace("http://","ws://");URL=f"{BASE}/agent/ws?server_id={C['server_id']}&token={C['agent_token']}";MEM=int(C.get("memory_mb",2048));RUNTIME=C.get("runtime","vanilla").lower();JAVA_BIN=f"/usr/lib/jvm/java-{C.get('java_major',21)}-openjdk-amd64/bin/java";process=None;lock=asyncio.Lock();players=set();max_players=20
+ROOT=Path("/opt/minehub");SERVER=ROOT/"server";C=json.loads((ROOT/"config.json").read_text());BASE=C["control_url"].rstrip("/").replace("https://","wss://").replace("http://","ws://");URL=f"{BASE}/agent";process=None;players=set();lock=asyncio.Lock();MEM=int((psutil.virtual_memory().total//1048576)*.75);RUNTIME=(ROOT/"runtime.txt").read_text().strip() if (ROOT/"runtime.txt").exists() else "vanilla";JAVA_BIN=shutil.which("java") or "/usr/bin/java"
 def safe(rel):
     p=(SERVER/rel.strip().replace("\\","/")).resolve()
     if p!=SERVER and SERVER not in p.parents:raise ValueError("Invalid path")
@@ -84,7 +84,7 @@ def download_modpack(url):
     return index.get("name","Modrinth modpack")
 
 def download(url,target):
-    folder=safe(target);folder.mkdir(parents=True,exist_ok=True);name=url.split("?")[0].rsplit("/",1)[-1] or "download.jar";out=folder/name;tmp=out.with_suffix(out.suffix+".part");req=urllib.request.Request(url,headers={"User-Agent":"MineHub-Agent/1.0"})
+    folder=safe(target);folder.mkdir(parents=True,exist_ok=True);name=url.split("?")[0].rsplit("/",1)[-1] or "download.jar";out=folder/name;tmp=out.with_suffix(out.suffix+".part");req=urllib.request.Request(url,headers={"User-Agent":"MineHub-Agent/2.0"})
     with urllib.request.urlopen(req,timeout=90) as r,open(tmp,"wb") as f:shutil.copyfileobj(r,f)
     tmp.replace(out);return str(out.relative_to(SERVER))
 def parse_player(line):
@@ -94,14 +94,14 @@ def parse_player(line):
     if m:players.discard(m.group(1))
 def parse_list(line):
     global max_players
-    m=re.search(r"There are (\\d+) of a max of (\\d+) players online",line)
+    m=re.search(r"There are (\d+) of a max of (\d+) players online",line)
     if m:return int(m.group(1)),int(m.group(2))
-    m=re.search(r"There are (\\d+) of a max (\\d+) players online",line)
+    m=re.search(r"There are (\d+) of a max (\d+) players online",line)
     if m:return int(m.group(1)),int(m.group(2))
     return None
 
 def metrics():
-    m=psutil.virtual_memory();d=psutil.disk_usage(str(SERVER));return {"cpu":psutil.cpu_percent(),"ram_used_mb":round(m.used/1048576),"ram_total_mb":round(m.total/1048576),"disk_used_gb":round(d.used/1073741824,2),"disk_total_gb":round(d.total/1073741824,2),"minecraft_running":bool(process and process.poll() is None),"players_online":len(players),"players":sorted(players),"max_players":max_players}
+    m=psutil.virtual_memory();d=psutil.disk_usage(str(SERVER));return {"cpu":psutil.cpu_percent(),"ram_used_mb":round(m.used/1048576),"ram_total_mb":round(m.total/1048576),"disk_used_gb":round(d.used/1073741824),"disk_total_gb":round(d.total/1073741824),"players":len(players)}
 async def output(ws):
     while True:
         if process and process.stdout:
@@ -157,7 +157,8 @@ async def handle(ws,m):
         was=bool(process and process.poll() is None)
         if was:stop()
         try:
-            await send(ws,{"type":"install","status":"backup","name":m.get("name")});await asyncio.to_thread(backup)
+            await send(ws,{"type":"install","status":"backup","name":m.get("name")})
+            await asyncio.to_thread(backup)
             await send(ws,{"type":"install","status":"download","name":m.get("name")})
             if m.get("target")=="modpack-zip":
                 p=await asyncio.to_thread(download_zip_pack,m["url"])
