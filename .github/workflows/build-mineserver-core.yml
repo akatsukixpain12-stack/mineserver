@@ -17,13 +17,22 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-      - name: Restore required headless gametest crate
+      - name: Restore required headless gametest crate from pinned source
         run: |
           set -euxo pipefail
-          mkdir -p server/crates/pumpkin-gametest
-          git clone --depth 1 https://github.com/Pumpkin-MC/Pumpkin.git /tmp/pumpkin-source
-          rm -rf server/crates/pumpkin-gametest
-          cp -R /tmp/pumpkin-source/crates/pumpkin-gametest server/crates/pumpkin-gametest
+          if [ ! -f server/crates/pumpkin-gametest/Cargo.toml ]; then
+            rm -rf /tmp/pumpkin-source
+            git init /tmp/pumpkin-source
+            git -C /tmp/pumpkin-source remote add origin https://github.com/Pumpkin-MC/Pumpkin.git
+            git -C /tmp/pumpkin-source fetch --depth 1 origin a8db585158ba109b4664eb755d7be76f20ac8f6b
+            git -C /tmp/pumpkin-source checkout --detach a8db585158ba109b4664eb755d7be76f20ac8f6b
+            cp -R /tmp/pumpkin-source/crates/pumpkin-gametest server/crates/pumpkin-gametest
+            git add server/crates/pumpkin-gametest
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Add required headless gametest core"
+            git push origin HEAD:main
+          fi
       - name: Build headless Mineserver binary
         working-directory: server
         run: cargo build --release -p mineserver
