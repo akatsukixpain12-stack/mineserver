@@ -1,7 +1,7 @@
 [package]
 name = "pumpkin-core"
 version.workspace = true
-description = "Empowering everyone to host fast and efficient Minecraft servers."
+description = "Mineserver native server core."
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
@@ -24,7 +24,6 @@ pumpkin-world.workspace = true
 pumpkin-data = { workspace = true, features = ["default"] }
 pumpkin-protocol = { workspace = true, features = ["default"] }
 pumpkin-macros.workspace = true
-pumpkin-gametest = { path = "../pumpkin-gametest" }
 
 dashmap.workspace = true
 crossbeam.workspace = true
