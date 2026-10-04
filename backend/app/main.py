@@ -265,6 +265,35 @@ async def catalog(
         return {"items":await curseforge_search(q,mc,loader,type)}
     raise HTTPException(400,"Invalid provider")
 
+@app.get("/api/servers/{sid}/backups")
+async def list_backups(sid,u=Depends(user)):
+    s=store.get_server(sid);owns(s,u)
+    if not settings.backup_bucket:
+        return {"configured":False,"backups":[]}
+    try:
+        from google.cloud import storage
+        client=storage.Client(project=settings.project_id or None)
+        bucket=client.bucket(settings.backup_bucket)
+        prefix=f"servers/{sid}/"
+        rows=[]
+        for blob in client.list_blobs(bucket, prefix=prefix):
+            rows.append({"name":blob.name.rsplit("/",1)[-1],"object":blob.name,"size":blob.size or 0,"created_at":blob.time_created.isoformat() if blob.time_created else None,"updated_at":blob.updated.isoformat() if blob.updated else None,"uri":f"gs://{settings.backup_bucket}/{blob.name}"})
+        rows.sort(key=lambda x:x.get("created_at") or "",reverse=True)
+        return {"configured":True,"backups":rows[:100]}
+    except Exception as exc:
+        raise HTTPException(502,f"Backup storage unavailable: {exc}") from exc
+
+@app.post("/api/servers/{sid}/backups")
+async def create_backup(sid,u=Depends(user)):
+    s=store.get_server(sid);owns(s,u)
+    if not settings.backup_bucket:
+        raise HTTPException(503,"Cloud backup storage is not configured.")
+    agent=AGENTS.get(sid)
+    if not agent:
+        raise HTTPException(409,"Runtime agent is offline")
+    await agent.send_json({"type":"backup"})
+    return {"ok":True,"queued":True}
+
 @app.post("/api/servers/{sid}/install")
 async def install(sid,body:InstallRequest,u=Depends(user)):
     s=store.get_server(sid);owns(s,u)
