@@ -117,7 +117,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;background:rad
 const $=id=>document.getElementById(id);
 const state={token:null,user:null,workspaceId:null,servers:[],selected:null,ws:null,currentPage:"dashboard",versions:{},runtimes:[]};
 function esc(x){return String(x??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
-async function api(path,opt={}){opt.headers=Object.assign({"Content-Type":"application/json","Authorization:"Bearer "+state.token},opt.headers||{});const r=await fetch(path,opt);let d={};try{d=await r.json()}catch{}if(!r.ok)throw Error(d.detail||d.message||"Request failed");return d}
+async function api(path,opt={}){opt.headers=Object.assign({"Content-Type":"application/json","X-Workspace-ID":state.workspaceId||"default"},opt.headers||{});const r=await fetch(path,opt);let d={};try{d=await r.json()}catch{}if(!r.ok)throw Error(d.detail||d.message||"Request failed");return d}
 function toast(s){$("toast").textContent=s;$("toast").classList.remove("hidden");clearTimeout(window.__toast);window.__toast=setTimeout(()=>$("toast").classList.add("hidden"),2800)}
 async function loadConfig(){const r=await fetch("/api/config");return r.json()}
 function makeWorkspaceId(){const k="mineserver_workspace_id";let id=localStorage.getItem(k);if(!id){id=crypto.randomUUID?crypto.randomUUID():("ws-"+Math.random().toString(36).slice(2)+Date.now());localStorage.setItem(k,id)}return id}
