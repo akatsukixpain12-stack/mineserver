@@ -1,0 +1,16 @@
+[package]
+name = "mineserver-desktop"
+version = "0.1.0"
+description = "Mineserver desktop application"
+authors = ["Mineserver contributors"]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2" }
+
+[dependencies]
+tauri = { version = "2" }
+tauri-plugin-shell = "2"
+
+[features]
+custom-protocol = ["tauri/custom-protocol"]

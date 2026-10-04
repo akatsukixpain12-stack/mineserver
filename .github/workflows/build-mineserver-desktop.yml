@@ -1,0 +1,56 @@
+name: Build Mineserver desktop apps
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            binary: server/target/x86_64-pc-windows-msvc/release/mineserver.exe
+            sidecar: desktop-app/src-tauri/binaries/mineserver-x86_64-pc-windows-msvc.exe
+          - os: macos-13
+            target: x86_64-apple-darwin
+            binary: server/target/x86_64-apple-darwin/release/mineserver
+            sidecar: desktop-app/src-tauri/binaries/mineserver-x86_64-apple-darwin
+          - os: macos-14
+            target: aarch64-apple-darwin
+            binary: server/target/aarch64-apple-darwin/release/mineserver
+            sidecar: desktop-app/src-tauri/binaries/mineserver-aarch64-apple-darwin
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Add Rust target
+        shell: bash
+        run: rustup target add ${{ matrix.target }}
+      - name: Build Mineserver core
+        run: cargo build --release --manifest-path server/Cargo.toml -p mineserver --target ${{ matrix.target }}
+      - name: Stage native sidecar
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p desktop-app/src-tauri/binaries
+          cp "${{ matrix.binary }}" "${{ matrix.sidecar }}"
+      - name: Install desktop dependencies
+        working-directory: desktop-app
+        run: npm install
+      - name: Build Mineserver desktop app
+        working-directory: desktop-app
+        env:
+          MINESERVER_DESKTOP_AUTOSTART: "0"
+        run: npm run build
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: mineserver-${{ matrix.target }}
+          path: desktop-app/src-tauri/target/release/bundle/**

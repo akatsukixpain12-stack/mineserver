@@ -1,0 +1,14 @@
+{
+  "name": "mineserver-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mineserver desktop shell for the web control plane and native server core.",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "copy": "node scripts/copy-web.mjs"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2"
+  }
+}
