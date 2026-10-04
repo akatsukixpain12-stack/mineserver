@@ -57,6 +57,25 @@ async def metrics_loop(ws):
             except Exception: pass
         await send(ws,{"type":"metrics","data":metrics()})
         await asyncio.sleep(5)
+def list_files(rel=""):
+    p=(SERVER/rel).resolve()
+    if SERVER not in p.parents and p!=SERVER: raise ValueError("invalid path")
+    if not p.is_dir(): raise ValueError("not a directory")
+    return [{"name":x.name,"path":str(x.relative_to(SERVER)),"directory":x.is_dir(),"size":x.stat().st_size if x.is_file() else None} for x in sorted(p.iterdir(),key=lambda x:(not x.is_dir(),x.name.lower()))]
+
+def read_text(rel):
+    p=(SERVER/rel).resolve()
+    if SERVER not in p.parents or not p.is_file(): raise ValueError("invalid file")
+    if p.stat().st_size>2000000: raise ValueError("file too large")
+    return p.read_text()
+
+def write_text(rel,content):
+    p=(SERVER/rel).resolve()
+    if SERVER not in p.parents or p==SERVER: raise ValueError("invalid file")
+    allowed={"server.properties","eula.txt","whitelist.json","ops.json","banned-players.json","banned-ips.json"}
+    if p.name not in allowed and not str(p).startswith(str(SERVER/"config")): raise ValueError("file is not editable")
+    p.parent.mkdir(parents=True,exist_ok=True);p.write_text(content)
+
 async def handle(ws,m):
     t=m.get("type")
     if t=="power":
@@ -66,6 +85,15 @@ async def handle(ws,m):
         elif a=="restart":stop();time.sleep(2);launch()
         await send(ws,{"type":"ack","action":a})
     elif t=="command":command(m["command"]);await send(ws,{"type":"ack","command":m["command"]})
+    elif t=="files_list":
+        try: await send(ws,{"type":"files","action":"list","path":m.get("path",""),"items":list_files(m.get("path",""))})
+        except Exception as e: await send(ws,{"type":"files","action":"error","message":str(e)})
+    elif t=="file_read":
+        try: await send(ws,{"type":"files","action":"read","path":m["path"],"content":read_text(m["path"])})
+        except Exception as e: await send(ws,{"type":"files","action":"error","message":str(e)})
+    elif t=="file_write":
+        try: write_text(m["path"],m["content"]);await send(ws,{"type":"files","action":"saved","path":m["path"]})
+        except Exception as e: await send(ws,{"type":"files","action":"error","message":str(e)})
     elif t=="install":
         was=bool(process and process.poll() is None)
         if was:stop()
