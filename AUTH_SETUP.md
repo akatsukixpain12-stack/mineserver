@@ -1,21 +1,33 @@
-# Mineserver web authentication
+# Mineserver authentication
 
-Mineserver is a web hosting control plane. Google Identity Services authenticates the browser, and FastAPI verifies the Google ID token server-side. The verified Google account subject is used as the persistent server owner ID.
+Mineserver uses Google Identity Services for browser login. The browser receives a Google ID token and sends it to the same-origin FastAPI control plane as a Bearer token.
 
-## Required Google setup
+## Production
 
-Set `GOOGLE_CLIENT_ID` on the Mineserver Cloud Run control plane.
+Deploy the complete Mineserver image to Cloud Run. Cloud Run serves both the frontend and FastAPI from the same origin:
 
-For a Web application OAuth client, add the exact Mineserver web origin to **Authorized JavaScript origins**. Google documents that the Web Client ID identifies the application and that the site's origin must be registered. citeturn635625search0turn635625search2
+https://mineserver.example.com/
+https://mineserver.example.com/api/config
+https://mineserver.example.com/api/auth/check
+https://mineserver.example.com/api/servers
+https://mineserver.example.com/api/catalog/versions
 
-For GitHub Pages/static hosting, set the Mineserver API URL in the login panel. The static frontend cannot magically discover an unrelated Cloud Run hostname.
+There is no API URL field in the web application.
 
-## Persistent servers
+Set GOOGLE_CLIENT_ID on Cloud Run. In Google Cloud Console, configure the OAuth Web client with the exact Mineserver web origin under Authorized JavaScript origins.
 
-The control plane stores each server with the verified Google account subject as `owner_id`. Firestore is used when configured; local development falls back to SQLite.
+The backend verifies:
+- Google issuer
+- OAuth audience against GOOGLE_CLIENT_ID
+- token expiry/signature
+- the immutable Google sub account identifier
 
-The browser stores the short-lived ID token in `sessionStorage` and sends it as a Bearer token. No Google client secret is placed in the web UI.
+The verified sub is the owner ID for persisted servers.
 
-## Native core
+## Local development
 
-The `server/` directory is the headless native Mineserver core used by the web control plane. Desktop-only/development-only Pumpkin app files are not part of the hosting panel. Upstream GPL-3.0 notices and required attribution remain in the native source.
+SQLite is used only when Firestore is unavailable. It is a development fallback, not the production datastore.
+
+## Native runtime
+
+server/ contains the headless Mineserver native runtime. The web application and native runtime remain separate components.
