@@ -43,7 +43,7 @@ printf '%s' '{a}' | base64 -d > /opt/minehub/agent.py
 printf '%s' '{meta}' | base64 -d > /opt/minehub/config.json
 cd /opt/minehub/server
 if [ ! -f server.jar ] && [ ! -f installer.jar ]; then curl -fL --retry 5 -A '{UA}' -o server.jar '{jar_url}'; fi
-if [ "${server_runtime:-vanilla}" = "forge" ] || [ "${server_runtime:-vanilla}" = "neoforge" ]; then
+if [ "{server.get("software","vanilla")}" = "forge" ] || [ "{server.get("software","vanilla")}" = "neoforge" ]; then
   if [ ! -f run.sh ]; then mv server.jar installer.jar 2>/dev/null || true; java -jar installer.jar --installServer; rm -f installer.jar; fi
 fi
 printf 'eula=true\\nserver-port=25565\\nserver-ip=\\nmax-players=20\\nmotd=MineHub Server\\n' > server.properties
