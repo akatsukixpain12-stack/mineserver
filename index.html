@@ -13,13 +13,7 @@
 </head>
 <body>
 <div id="loginGate" style="position:fixed;inset:0;background:#070807;color:#f4f7f3;display:grid;place-items:center;z-index:9999;padding:24px"><div style="width:min(430px,100%);border:1px solid #222a24;border-radius:20px;background:#0d100e;padding:28px;box-shadow:0 30px 100px #000"><div style="width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#b8ff9c,#46d36c);display:grid;place-items:center;color:#061008;font-weight:900;font-size:20px;margin-bottom:18px">M</div><div style="color:#7ee787;font-size:10px;text-transform:uppercase;letter-spacing:1.6px">Mineserver</div><h1 style="font-size:28px;letter-spacing:-1px;margin:7px 0">Your servers. Your account.</h1><p style="color:#8e9990;font-size:12px;line-height:1.6;margin:0 0 14px">Sign in with Google to keep your Minecraft servers stored to your account across sessions.</p>
-    <div id="apiSetup" style="display:none;border:1px solid #222a24;border-radius:10px;padding:10px;margin-bottom:12px;background:#080b09">
-      <div style="font-size:9px;color:#8e9990;margin-bottom:6px">Mineserver control-plane URL</div>
-      <div style="display:flex;gap:6px;margin-bottom:8px"><input id="apiUrlInput" style="flex:1;background:#0d120f;border:1px solid #222a24;color:#e6eee7;border-radius:7px;padding:8px;font-size:10px" placeholder="https://your-cloud-run-url.run.app"><button class="btn primary" onclick="saveApiUrl()">Connect</button></div>
-      <div style="font-size:9px;color:#8e9990;margin-bottom:6px">Google Web Client ID (only needed when the backend does not expose /api/config)</div>
-      <input id="googleClientInput" style="width:100%;background:#0d120f;border:1px solid #222a24;color:#e6eee7;border-radius:7px;padding:8px;font-size:10px" placeholder="1234567890-xxxxx.apps.googleusercontent.com">
-    </div>
-    <div id="googleButton"></div><div id="loginStatus" style="font-size:10px;color:#687269;margin-top:14px">Loading Google sign-in…</div></div></div>
+    <div id="googleButton"/>></div><div id="loginStatus" style="font-size:10px;color:#687269;margin-top:14px">Loading Google sign-in…</div></div></div>
 <div class="app">
 <aside class="side">
  <div class="brand"><div class="brandmark">M</div>Mineserver</div>
@@ -80,10 +74,10 @@
 
 <script>
 const $=id=>document.getElementById(id);
-const state={googleToken:sessionStorage.getItem('mineserver_google_token')||'',user:null,googleClientId:'',apiBase:(localStorage.getItem('mineserver_api_url')||document.querySelector('meta[name="mineserver-api-url"]')?.content||(location.hostname.endsWith('github.io')?'':location.origin)).replace(/\/$/,''),servers:[],selected:null,ws:null,runtimes:[],versions:{},runtime:null,version:null,type:'mod',path:''};
+const state={googleToken:sessionStorage.getItem('mineserver_google_token')||'',user:null,googleClientId:'',apiBase:(localStorage.getItem('mineserver_api_url')||document.querySelector('meta[name="mineserver-api-url"]')?.content||location.origin).replace(/\/$/,''),servers:[],selected:null,ws:null,runtimes:[],versions:{},runtime:null,version:null,type:'mod',path:''};
 function apiUrl(path){return state.apiBase+(path.startsWith('/')?path:'/'.concat(path))}
-function saveApiUrl(){const v=($('apiUrlInput').value||'').trim().replace(/\/$/,'');if(!/^https:\/\//i.test(v)){setLoginStatus('Use the HTTPS URL of your Mineserver Cloud Run control plane.',true);return}localStorage.setItem('mineserver_api_url',v);state.apiBase=v;location.reload()}
-function showApiSetup(){const box=$('apiSetup');if(box){box.style.display='block';$('apiUrlInput').value=state.apiBase;$('googleClientInput').value=localStorage.getItem('mineserver_google_client_id')||state.googleClientId||''}}
+function saveApiUrl(){}
+function showApiSetup(){}
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(s){$('toast').textContent=s;$('toast').classList.remove('hide');clearTimeout(window._toast);window._toast=setTimeout(()=>$('toast').classList.add('hide'),2600)}
@@ -93,7 +87,7 @@ function hideLogin(){$('loginGate').style.display='none'}
 function googleCredential(resp){if(!resp?.credential)return;state.googleToken=resp.credential;sessionStorage.setItem('mineserver_google_token',resp.credential);finishLogin().catch(e=>{state.googleToken='';sessionStorage.removeItem('mineserver_google_token');showLogin(e.message||'Google sign-in failed')})}
 async function initGoogle(clientId){
   state.googleClientId=clientId||localStorage.getItem('mineserver_google_client_id')||'';
-  if(!state.googleClientId){setLoginStatus('Google sign-in is not configured yet. Enter the Web Client ID below.',true);showApiSetup();return false}
+  if(!state.googleClientId){setLoginStatus('Google sign-in is not configured on the Mineserver server.',true);return false}
   await new Promise((resolve,reject)=>{let n=0;const t=setInterval(()=>{if(window.google?.accounts?.id){clearInterval(t);resolve()}else if(++n>150){clearInterval(t);reject(Error('Google Identity Services did not load. Check the browser network/ad blocker.'))}},100)});
   google.accounts.id.initialize({client_id:state.googleClientId,callback:googleCredential,auto_select:false,cancel_on_tap_outside:true});
   const box=document.getElementById('googleButton');box.innerHTML='';
@@ -167,7 +161,7 @@ async function createServer(){const name=$('newName').value.trim();if(!name)retu
 async function refreshAll(){await loadServers();if(state.selected)await refreshStats();toast('Live data refreshed')}
 async function boot(){
   try{
-    if(!state.apiBase){showApiSetup();setLoginStatus('Connect this web panel to the Mineserver API.',true);return}
+
     const r=await fetch(apiUrl('/api/config'),{headers:{'Accept':'application/json'}});
     const ct=r.headers.get('content-type')||'';
     if(!ct.includes('application/json')){
@@ -182,7 +176,7 @@ async function boot(){
       try{await finishLogin()}catch(e){sessionStorage.removeItem('mineserver_google_token');state.googleToken='';showLogin(e.message||'Please sign in with Google')}
     }else setLoginStatus('Sign in with Google to load your servers.')
   }catch(e){showApiSetup();showLogin(e.message||'Unable to connect to Mineserver')}
-  setTimeout(()=>{if(state.apiBase&&!state.googleClientId)showApiSetup()},500)
+
 }
 boot();
 </script>
