@@ -10,6 +10,7 @@ SERVER_ID=str(C.get("server_id") or "")
 BASE=C["control_url"].rstrip("/")
 URL=BASE.replace("https://","wss://").replace("http://","ws://")+"/agent/ws"
 TOKEN=str(C.get("agent_token") or "")
+BACKUP_BUCKET=str(C.get("backup_bucket") or "")
 process=None
 players=set()
 max_players=20
@@ -76,7 +77,15 @@ def backup():
     b=ROOT/"backups"
     b.mkdir(exist_ok=True)
     name="backup-"+time.strftime("%Y%m%d-%H%M%S")
-    return shutil.make_archive(str(b/name),"zip",root_dir=SERVER)
+    archive=Path(shutil.make_archive(str(b/name),"zip",root_dir=SERVER))
+    if not BACKUP_BUCKET:
+        return {"local_path":str(archive),"uri":None}
+    from google.cloud import storage
+    client=storage.Client()
+    object_name=f"servers/{SERVER_ID}/{archive.name}"
+    blob=client.bucket(BACKUP_BUCKET).blob(object_name)
+    blob.upload_from_filename(str(archive),content_type="application/zip")
+    return {"local_path":str(archive),"uri":f"gs://{BACKUP_BUCKET}/{object_name}","object":object_name,"size":archive.stat().st_size}
 
 def download_zip_pack(url):
     tmp=ROOT/"serverpack.tmp.zip"
@@ -280,6 +289,13 @@ async def handle(ws,m):
             await send(ws,{"type":"files","action":"saved","path":m["path"]})
         except Exception as exc:
             await send(ws,{"type":"files","action":"error","message":str(exc)})
+    elif t=="backup":
+        try:
+            await send(ws,{"type":"backup","status":"creating"})
+            result=await asyncio.to_thread(backup)
+            await send(ws,{"type":"backup","status":"uploaded" if result.get("uri") else "local","name":Path(result["local_path"]).name,**result})
+        except Exception as exc:
+            await send(ws,{"type":"backup","status":"error","message":str(exc)})
     elif t=="install":
         was_running=bool(process and process.poll() is None)
         if was_running:
