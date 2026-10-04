@@ -3,6 +3,7 @@ import asyncio,hmac,json,secrets,uuid
 from datetime import datetime,timezone
 from fastapi import Depends,FastAPI,Header,HTTPException,Query,WebSocket,WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from pydantic import BaseModel,Field
@@ -195,3 +196,6 @@ async def broadcast(sid,payload):
         try: await ws.send_json(payload)
         except Exception: dead.append(ws)
     for ws in dead: BROWSERS.get(sid,set()).discard(ws)
+
+# Serve the same production UI from Cloud Run. API and frontend therefore share one origin.
+app.mount("/", StaticFiles(directory="/app/web", html=True), name="web")
