@@ -215,6 +215,7 @@ pumpkin-codecs = { path = "crates/pumpkin-codecs", default-features = false }
 pumpkin-command = { path = "crates/pumpkin-command", default-features = false }
 pumpkin-config = { path = "crates/pumpkin-config", default-features = false }
 pumpkin-core = { path = "crates/pumpkin-core", default-features = false }
+pumpkin-gametest = { path = "crates/pumpkin-gametest", default-features = false }
 pumpkin-data = { path = "crates/pumpkin-data", default-features = false }
 pumpkin-inventory = { path = "crates/pumpkin-inventory", default-features = false }
 pumpkin-macros = { path = "crates/pumpkin-macros", default-features = false }
