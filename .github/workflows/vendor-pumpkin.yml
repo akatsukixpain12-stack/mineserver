@@ -1,0 +1,94 @@
+name: Vendor full Pumpkin server source
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/vendor-pumpkin.yml"
+      - "bootstrap/pumpkin.import"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  vendor:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      PUMPKIN_COMMIT: a8db585158ba109b4664eb755d7be76f20ac8f6b
+    steps:
+      - name: Checkout Mineserver
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Clone exact Pumpkin source
+        run: |
+          set -euxo pipefail
+          rm -rf /tmp/pumpkin server
+          git init /tmp/pumpkin
+          git -C /tmp/pumpkin remote add origin https://github.com/Pumpkin-MC/Pumpkin.git
+          git -C /tmp/pumpkin fetch --depth 1 origin "$PUMPKIN_COMMIT"
+          git -C /tmp/pumpkin checkout --detach "$PUMPKIN_COMMIT"
+
+      - name: Vendor complete tree
+        run: |
+          set -euxo pipefail
+          mkdir -p server
+          rsync -a --delete --exclude '.git/' /tmp/pumpkin/ server/
+          mkdir -p server/docs
+          cat > server/MINESERVER.md <<'EOF'
+          # Mineserver server core
+
+          This directory is a vendored copy of Pumpkin at commit `a8db585158ba109b4664eb755d7be76f20ac8f6b`.
+
+          The upstream source remains under its original GPL-3.0 license and retains its required copyright and license notices.
+
+          Mineserver's control-plane and hosting integration lives outside this vendored source. The built server binary is exposed by the build tooling as `mineserver` without removing the upstream attribution.
+          EOF
+          rm -f bootstrap/pumpkin.import
+
+      - name: Optimize Mineserver build tooling
+        run: |
+          set -euxo pipefail
+          mkdir -p scripts
+          cat > scripts/build-mineserver.sh <<'EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          cargo build --release --manifest-path server/Cargo.toml -p pumpkin
+          mkdir -p bin
+          cp -f server/target/release/pumpkin bin/mineserver
+          EOF
+          chmod +x scripts/build-mineserver.sh
+
+          cat > scripts/build-mineserver.ps1 <<'EOF'
+          $ErrorActionPreference = "Stop"
+          cargo build --release --manifest-path server/Cargo.toml -p pumpkin
+          New-Item -ItemType Directory -Force bin | Out-Null
+          Copy-Item server/target/release/pumpkin.exe bin/mineserver.exe -Force
+          EOF
+
+      - name: Verify full vendored tree
+        run: |
+          set -euo pipefail
+          files=$(find server -type f | wc -l)
+          bytes=$(du -sb server | cut -f1)
+          test "$files" -gt 10000
+          test "$bytes" -gt 100000000
+          test -f server/LICENSE
+          test -f server/Cargo.toml
+          test -f server/crates/pumpkin/Cargo.toml
+          echo "Vendored server files: $files"
+          echo "Vendored server bytes: $bytes"
+
+      - name: Commit vendored source
+        run: |
+          set -euxo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add server scripts bootstrap/pumpkin.import
+          git diff --cached --quiet && exit 0
+          git commit -m "Vendor full Pumpkin server core into Mineserver"
+          git push origin HEAD:main
