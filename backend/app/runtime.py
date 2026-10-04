@@ -116,3 +116,21 @@ async def resolve_runtime(runtime,mc):
             return f"https://maven.neoforged.net/releases/net/neoforged/neoforge/{ver}/neoforge-{ver}-installer.jar"
 
         raise ValueError(f"Unsupported runtime: {runtime}")
+
+
+def java_major_for_minecraft(mc:str)->int:
+    s=mc.lower()
+    if s.startswith("26.") or s.startswith("27.") or s.startswith("28."):
+        return 25
+    m=re.match(r"1\.(\d+)(?:\.(\d+))?",s)
+    if not m:
+        return 25
+    n=int(m.group(1))
+    patch=int(m.group(2) or 0)
+    if n>20 or (n==20 and patch>=5):
+        return 21
+    if n>=18:
+        return 17
+    if n==17:
+        return 16
+    return 8
