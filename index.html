@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MINEHUB — Minecraft Server Hosting</title>
+<meta name="description" content="Free Minecraft server creation and management dashboard.">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+:root{
+  --bg:#07151a;--panel:#0b2028;--panel2:#0e2a34;--panel3:#123440;
+  --line:#194452;--text:#f4fbfd;--muted:#8ba9b2;--green:#63e6a7;--cyan:#56c7ff;
+  --danger:#ff6b7a;--warn:#ffd166;--shadow:0 18px 50px rgba(0,0,0,.24);
+}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(circle at 15% 0%,#10333d 0,transparent 32%),var(--bg);color:var(--text);font-family:"DM Sans",system-ui,sans-serif}
+button,input,select{font:inherit}button{border:0;color:inherit;cursor:pointer}
+.app{display:grid;grid-template-columns:245px 1fr;min-height:100vh}
+.sidebar{position:sticky;top:0;height:100vh;padding:20px 15px;border-right:1px solid var(--line);background:rgba(5,18,23,.82);backdrop-filter:blur(18px)}
+.brand{display:flex;align-items:center;gap:11px;padding:10px 9px 25px;font-weight:800;letter-spacing:-.5px}
+.logo{width:36px;height:36px;border-radius:12px;background:linear-gradient(145deg,#79efb3,#43bfff);display:grid;place-items:center;color:#052029;font-weight:900;box-shadow:0 8px 25px #45d8a530}
+.logo:before{content:"✦";font-size:20px}
+.nav-title{font-size:11px;color:#587982;text-transform:uppercase;letter-spacing:1.6px;padding:12px 11px 7px}
+.nav{display:grid;gap:5px}.nav button{background:transparent;text-align:left;padding:11px 12px;border-radius:12px;color:#88a6ae;display:flex;gap:11px;align-items:center;transition:.2s}
+.nav button:hover{background:#102c35;color:#dff8fc;transform:translateX(2px)}.nav button.active{background:#123743;color:#fff;box-shadow:inset 3px 0 var(--green)}
+.nav .ico{width:18px;text-align:center}
+.sidebar-bottom{position:absolute;left:15px;right:15px;bottom:16px}.profile{padding:11px;border:1px solid var(--line);border-radius:14px;background:#0a2028;display:flex;gap:10px;align-items:center}
+.avatar{width:31px;height:31px;border-radius:10px;background:linear-gradient(135deg,#6ee7b7,#56c7ff);display:grid;place-items:center;color:#052029;font-weight:800}
+.profile small{display:block;color:#6f9199;font-size:11px;margin-top:2px}.online{margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green)}
+.main{padding:25px 30px 60px;max-width:1500px;width:100%;margin:auto}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:25px}.crumb{color:#6e9099;font-size:13px}.crumb b{color:#e9f9fb}
+.top-actions{display:flex;gap:8px}.icon-btn,.ghost{background:#0c242c;border:1px solid var(--line);border-radius:11px;padding:9px 12px;color:#a9c1c7}.icon-btn:hover,.ghost:hover{background:#12323c}
+.hero{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;margin-bottom:23px}
+h1{font-size:31px;margin:3px 0 7px;letter-spacing:-1px}p{color:var(--muted);margin:0}.badge{display:inline-flex;align-items:center;gap:7px;padding:5px 9px;border-radius:999px;font-size:12px;background:#0d3029;color:var(--green);border:1px solid #245e4d}.dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.primary{background:linear-gradient(135deg,#65e8ad,#48bfff);color:#052028;font-weight:800;padding:11px 16px;border-radius:12px;box-shadow:0 10px 30px #45cfa42a;transition:.2s}.primary:hover{transform:translateY(-2px);box-shadow:0 15px 35px #45cfa43d}
+.grid{display:grid;grid-template-columns:1.35fr .8fr;gap:18px}.card{background:linear-gradient(180deg,#0c2630,#0a2028);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}.card-head{display:flex;justify-content:space-between;align-items:center;padding:17px 18px;border-bottom:1px solid #153944}.card-head h2{font-size:15px;margin:0}.card-head span{font-size:12px;color:#76959d}
+.server-list{display:grid;gap:10px;padding:13px}.server{display:grid;grid-template-columns:auto 1fr auto;gap:13px;align-items:center;padding:13px;border:1px solid #173b47;background:#0b242d;border-radius:14px;transition:.2s;cursor:pointer}.server:hover{transform:translateY(-2px);border-color:#286172;background:#0d2933}.server.selected{border-color:#347b8e;box-shadow:0 0 0 1px #347b8e55}
+.server-icon{width:43px;height:43px;border-radius:13px;display:grid;place-items:center;font-size:22px;background:linear-gradient(135deg,#243f32,#0c6851)}.server:nth-child(2) .server-icon{background:linear-gradient(135deg,#3e334f,#244e6b)}.server:nth-child(3) .server-icon{background:linear-gradient(135deg,#493b28,#6a5421)}
+.server-name{font-weight:800}.server-meta{font-size:12px;color:#75949d;margin-top:3px}.server-right{text-align:right}.players{font-size:12px;color:#a8c6cd}.tiny-status{font-size:11px;color:var(--green);margin-top:5px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px}.stat{padding:15px;border:1px solid var(--line);border-radius:15px;background:#0b232b}.stat label{font-size:11px;color:#6f929b;text-transform:uppercase;letter-spacing:1px}.stat strong{display:block;font-size:21px;margin-top:7px}.meter{height:5px;border-radius:5px;background:#16343e;margin-top:9px;overflow:hidden}.meter i{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--cyan));border-radius:inherit}
+.console{height:330px;background:#061116;padding:14px;font:12px/1.65 "JetBrains Mono",monospace;overflow:auto;color:#b7d1d6}.line{white-space:pre-wrap}.line .time{color:#47666e}.line .ok{color:#65e8ad}.line .warn{color:#ffd166}.line .err{color:#ff7483}.cmd{display:flex;gap:8px;padding:10px;border-top:1px solid #15343d;background:#0a1b21}.cmd input{flex:1;background:#061116;border:1px solid #173842;border-radius:10px;color:#eafcff;padding:10px 12px;outline:none;font:12px "JetBrains Mono"}.cmd input:focus{border-color:#34798a}
+.power{display:flex;gap:7px}.power button{padding:8px 11px;border-radius:9px;background:#122c34;color:#aac3c9}.power .start{background:#113b31;color:var(--green)}.power .stop{color:#ff8791}
+.side-stack{display:grid;gap:18px}.join{padding:18px}.ip{display:flex;align-items:center;justify-content:space-between;padding:12px;border-radius:12px;background:#07181e;border:1px solid #163b46;margin-top:12px;font:13px "JetBrains Mono"}.copy{background:#153944;padding:6px 9px;border-radius:8px;color:#a8d5df}.quick{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:13px}.quick button{padding:13px;border-radius:12px;background:#0d2932;border:1px solid #194451;text-align:left}.quick button:hover{background:#123742}.quick b{display:block;font-size:13px}.quick small{color:#6f9099}
+.section{display:none}.section.active{display:block}
+.panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}.catalog{display:grid;gap:10px;padding:14px}.search{display:flex;gap:8px;padding:14px;border-bottom:1px solid #153944}.search input,.select{width:100%;background:#071a20;border:1px solid #173e49;color:#e7f7fa;border-radius:10px;padding:10px;outline:none}.mod{display:grid;grid-template-columns:48px 1fr auto;gap:12px;align-items:center;padding:12px;border:1px solid #183d47;border-radius:13px;background:#0b242d}.mod-icon{width:48px;height:48px;border-radius:12px;background:#163d49;display:grid;place-items:center;font-size:22px}.mod h3{font-size:13px;margin:0 0 3px}.mod p{font-size:11px}.install{padding:8px 11px;border-radius:9px;background:#153e47;color:#76e8b2;font-size:12px}.install:hover{background:#1a5260}
+.files{padding:14px}.file{display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid #12343e}.file:last-child{border:0}.file b{font-size:13px}.file small{color:#6f8f98;margin-left:auto}
+.players-list{padding:14px;display:grid;gap:8px}.player{display:flex;align-items:center;gap:10px;padding:11px;background:#0b252d;border:1px solid #173d48;border-radius:12px}.skin{width:32px;height:32px;border-radius:9px;background:linear-gradient(145deg,#d4a373,#588157)}.player small{color:#6f9098;margin-left:auto}
+.empty{padding:30px;text-align:center;color:#6e8d96}.empty strong{display:block;color:#cfe3e7;margin-bottom:5px}
+.toast{position:fixed;right:24px;bottom:24px;padding:12px 15px;border:1px solid #245765;border-radius:12px;background:#0a252e;box-shadow:var(--shadow);opacity:0;transform:translateY(10px);transition:.25s;z-index:20}.toast.show{opacity:1;transform:none}
+.modal{position:fixed;inset:0;background:#020a0dcc;backdrop-filter:blur(8px);display:none;place-items:center;padding:20px;z-index:30}.modal.show{display:grid}.modal-box{width:min(650px,100%);background:#0b242d;border:1px solid #245363;border-radius:20px;box-shadow:0 30px 100px #0008}.modal-head{padding:18px 20px;border-bottom:1px solid #173d47;display:flex;justify-content:space-between}.form{padding:20px;display:grid;gap:13px}.form label{font-size:12px;color:#86a5ad}.form input,.form select{margin-top:6px;width:100%;background:#071a20;border:1px solid #194452;color:white;padding:11px;border-radius:10px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.modal-actions{padding:15px 20px;border-top:1px solid #173d47;display:flex;justify-content:flex-end;gap:8px}
+.footer-note{margin-top:18px;color:#58767f;font-size:11px;text-align:center}
+@media(max-width:980px){.app{grid-template-columns:75px 1fr}.sidebar{padding:15px 10px}.brand span,.nav-title,.nav button span,.profile>div:not(.avatar),.sidebar .online{display:none}.nav button{justify-content:center}.grid,.panel-grid{grid-template-columns:1fr}.main{padding:20px}.stats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.app{display:block}.sidebar{height:auto;position:sticky;z-index:10;top:0;border-right:0;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:8px}.brand{padding:0;margin-right:auto}.nav{display:flex}.nav button{padding:9px}.sidebar-bottom{display:none}.hero{align-items:flex-start;flex-direction:column}.stats{grid-template-columns:1fr 1fr}.server{grid-template-columns:auto 1fr}.server-right{display:none}.form-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="logo"></div><span>MINEHUB</span></div>
+  <div class="nav-title">Workspace</div>
+  <nav class="nav">
+    <button class="active" data-page="dashboard"><span class="ico">⌂</span><span>Dashboard</span></button>
+    <button data-page="console"><span class="ico">▣</span><span>Console</span></button>
+    <button data-page="mods"><span class="ico">✦</span><span>Mods & Plugins</span></button>
+    <button data-page="files"><span class="ico">▤</span><span>Files</span></button>
+    <button data-page="players"><span class="ico">♙</span><span>Players</span></button>
+    <button data-page="settings"><span class="ico">⚙</span><span>Settings</span></button>
+  </nav>
+  <div class="nav-title">Community</div>
+  <nav class="nav">
+    <button onclick="toast('Server browser coming from the public API')"><span class="ico">◉</span><span>Join a server</span></button>
+    <button onclick="toast('Invite copied')"><span class="ico">↗</span><span>Invite friends</span></button>
+  </nav>
+  <div class="sidebar-bottom"><div class="profile"><div class="avatar">M</div><div><b>MANJIRO</b><small>Free account</small></div><i class="online"></i></div></div>
+</aside>
+
+<main class="main">
+<div class="topbar"><div class="crumb">MINEHUB / <b id="crumb">Dashboard</b></div><div class="top-actions"><button class="icon-btn" onclick="toast('Notifications are clear')">♢</button><button class="ghost" onclick="toast('Account settings')">MANJIRO ▾</button></div></div>
+
+<section id="dashboard" class="section active">
+  <div class="hero"><div><span class="badge"><i class="dot"></i> Platform operational</span><h1>Your Minecraft servers</h1><p>Create, host, install packs and manage everything from one place.</p></div><button class="primary" onclick="openCreate()">＋ Create server</button></div>
+  <div class="grid">
+    <div>
+      <div class="card"><div class="card-head"><h2>My servers</h2><span>3 servers</span></div><div class="server-list">
+        <div class="server selected" onclick="selectServer('Skyblock Realm',this)"><div class="server-icon">☁</div><div><div class="server-name">Skyblock Realm</div><div class="server-meta">Paper 1.21.10 · Frankfurt</div></div><div class="server-right"><div class="players">4 / 20</div><div class="tiny-status">● Online</div></div></div>
+        <div class="server" onclick="selectServer('Adventure SMP',this)"><div class="server-icon">◆</div><div><div class="server-name">Adventure SMP</div><div class="server-meta">Fabric 1.21.8 · Mumbai</div></div><div class="server-right"><div class="players">0 / 10</div><div class="tiny-status" style="color:#809aa2">● Offline</div></div></div>
+        <div class="server" onclick="selectServer('Friends Realm',this)"><div class="server-icon">♟</div><div><div class="server-name">Friends Realm</div><div class="server-meta">Vanilla 1.21.10 · Singapore</div></div><div class="server-right"><div class="players">2 / 8</div><div class="tiny-status">● Online</div></div></div>
+      </div></div>
+      <div class="stats">
+        <div class="stat"><label>CPU</label><strong id="cpu">23%</strong><div class="meter"><i style="width:23%"></i></div></div>
+        <div class="stat"><label>Memory</label><strong id="ram">1.8 / 4 GB</strong><div class="meter"><i style="width:45%"></i></div></div>
+        <div class="stat"><label>Storage</label><strong>2.4 / 10 GB</strong><div class="meter"><i style="width:24%"></i></div></div>
+        <div class="stat"><label>Players</label><strong>4 online</strong><div class="meter"><i style="width:20%"></i></div></div>
+      </div>
+      <div class="card" style="margin-top:18px"><div class="card-head"><h2>Live terminal</h2><span>WebSocket · connected</span></div><div id="consoleMini" class="console"></div><div class="cmd"><input id="miniCmd" placeholder="Type a server command…" onkeydown="if(event.key==='Enter')sendCommand(this)"><button class="primary" style="padding:9px 13px" onclick="sendCommand(document.getElementById('miniCmd'))">Send</button></div></div>
+    </div>
+    <div class="side-stack">
+      <div class="card"><div class="card-head"><h2>Connect</h2><span>Skyblock Realm</span></div><div class="join"><p>Share this address with your friends.</p><div class="ip"><span id="serverIp">skyblock.mh.gg:25565</span><button class="copy" onclick="copyIp()">Copy</button></div><div style="margin-top:13px"><button class="primary" style="width:100%" onclick="toast('Opening Minecraft connection helper…')">▶ Join server</button></div></div></div>
+      <div class="card"><div class="card-head"><h2>Quick actions</h2><span>Safe controls</span></div><div class="quick"><button onclick="power('start')"><b>▶ Start</b><small>Boot server</small></button><button onclick="power('restart')"><b>↻ Restart</b><small>Graceful restart</small></button><button onclick="power('stop')"><b>■ Stop</b><small>Save and stop</small></button><button onclick="go('mods')"><b>✦ Add content</b><small>Mods & plugins</small></button></div></div>
+      <div class="card"><div class="card-head"><h2>Recommended</h2><span>One click</span></div><div class="catalog"><div class="mod"><div class="mod-icon">⚙</div><div><h3>EssentialsX</h3><p>Paper plugin · Permissions & commands</p></div><button class="install" onclick="installItem('EssentialsX')">Install</button></div><div class="mod"><div class="mod-icon">◇</div><div><h3>Sodium</h3><p>Fabric mod · Performance</p></div><button class="install" onclick="installItem('Sodium')">Install</button></div></div></div>
+    </div>
+  </div>
+  <div class="footer-note">Built for a fast, friendly Minecraft panel — not a clone of Minefort.</div>
+</section>
+
+<section id="console" class="section">
+  <div class="hero"><div><span class="badge"><i class="dot"></i> Live connection</span><h1>Console</h1><p>Real-time logs, commands and power controls in one place.</p></div><div class="power"><button class="start" onclick="power('start')">▶ Start</button><button onclick="power('restart')">↻ Restart</button><button class="stop" onclick="power('stop')">■ Stop</button></div></div>
+  <div class="card"><div class="card-head"><h2>Skyblock Realm · Terminal</h2><span id="socketState">● WebSocket connected</span></div><div id="consoleFull" class="console" style="height:510px"></div><div class="cmd"><input id="fullCmd" placeholder="Enter a Minecraft command without /" onkeydown="if(event.key==='Enter')sendCommand(this)"><button class="primary" style="padding:9px 15px" onclick="sendCommand(document.getElementById('fullCmd'))">Send command</button></div></div>
+</section>
+
+<section id="mods" class="section">
+  <div class="hero"><div><span class="badge"><i class="dot"></i> Marketplace ready</span><h1>Mods & plugins</h1><p>Browse Modrinth and CurseForge and install compatible files with one click.</p></div><button class="ghost" onclick="toast('Dependency checker opened')">Check compatibility</button></div>
+  <div class="card"><div class="search"><input id="modSearch" placeholder="Search mods, plugins or modpacks…" oninput="filterMods()"><select class="select" id="source" style="max-width:160px" onchange="filterMods()"><option>All sources</option><option>Modrinth</option><option>CurseForge</option></select></div><div id="catalog" class="catalog"></div></div>
+  <div class="panel-grid" style="margin-top:15px"><div class="card"><div class="card-head"><h2>Installed</h2><span>3 items</span></div><div class="catalog"><div class="mod"><div class="mod-icon">✦</div><div><h3>LuckPerms</h3><p>Plugin · Paper · 5.4.x</p></div><button class="install" onclick="toast('LuckPerms removed')">Remove</button></div><div class="mod"><div class="mod-icon">◇</div><div><h3>FerriteCore</h3><p>Mod · Fabric · 7.x</p></div><button class="install" onclick="toast('FerriteCore removed')">Remove</button></div></div></div>
+    <div class="card"><div class="card-head"><h2>Installation queue</h2><span>Automatic restart</span></div><div class="catalog"><div class="empty"><strong>Queue is empty</strong>Install a pack and the panel will resolve versions and dependencies.</div></div></div></div>
+</section>
+
+<section id="files" class="section">
+  <div class="hero"><div><h1>Files</h1><p>Browse worlds, configs, mods and plugins without leaving the panel.</p></div><button class="primary" onclick="toast('Upload dialog opened')">＋ Upload</button></div>
+  <div class="card"><div class="card-head"><h2>/server</h2><span>10 GB allocation</span></div><div class="files">
+    <div class="file"><span>📁</span><b>world</b><small>Folder</small></div><div class="file"><span>📁</span><b>plugins</b><small>Folder</small></div><div class="file"><span>📁</span><b>mods</b><small>Folder</small></div><div class="file"><span>⚙</span><b>server.properties</b><small>4.2 KB</small></div><div class="file"><span>▤</span><b>eula.txt</b><small>0.1 KB</small></div><div class="file"><span>▤</span><b>latest.log</b><small>2.8 MB</small></div>
+  </div></div>
+</section>
+
+<section id="players" class="section">
+  <div class="hero"><div><h1>Players</h1><p>See who's online and manage access.</p></div><button class="ghost" onclick="toast('Player manager opened')">Manage whitelist</button></div>
+  <div class="card"><div class="card-head"><h2>Online now</h2><span>4 / 20</span></div><div class="players-list"><div class="player"><div class="skin"></div><b>Steve_2009</b><small>Survival · 42m</small></div><div class="player"><div class="skin" style="background:linear-gradient(145deg,#6b8afd,#f4c4f3)"></div><b>Zenitsu</b><small>Survival · 31m</small></div><div class="player"><div class="skin" style="background:linear-gradient(145deg,#f6bd60,#84a59d)"></div><b>Manjiro</b><small>Survival · 1h 12m</small></div><div class="player"><div class="skin" style="background:linear-gradient(145deg,#f28482,#577590)"></div><b>AlexCraft</b><small>Creative · 9m</small></div></div></div>
+</section>
+
+<section id="settings" class="section">
+  <div class="hero"><div><h1>Server settings</h1><p>Change the important bits without hunting through config files.</p></div><button class="primary" onclick="toast('Settings saved')">Save changes</button></div>
+  <div class="card"><div class="form"><div class="form-grid"><label>Server name<input value="Skyblock Realm"></label><label>Minecraft version<select><option>1.21.10</option><option>1.21.8</option></select></label></div><div class="form-grid"><label>Server type<select><option>Paper</option><option>Fabric</option><option>Vanilla</option><option>NeoForge</option><option>Forge</option></select></label><label>Max players<input type="number" value="20"></label></div><div class="form-grid"><label>Difficulty<select><option>Normal</option><option>Easy</option><option>Hard</option><option>Peaceful</option></select></label><label>Gamemode<select><option>Survival</option><option>Creative</option><option>Adventure</option><option>Spectator</option></select></label></div></div></div>
+</section>
+</main>
+</div>
+
+<div id="createModal" class="modal"><div class="modal-box"><div class="modal-head"><b>Create a server</b><button class="ghost" onclick="closeCreate()">✕</button></div><div class="form"><div class="form-grid"><label>Server name<input id="newName" placeholder="My SMP"></label><label>Region<select id="newRegion"><option>Asia — Mumbai</option><option>Europe — Frankfurt</option><option>Asia — Singapore</option><option>US — Iowa</option></select></label></div><div class="form-grid"><label>Software<select id="newSoftware"><option>Paper</option><option>Fabric</option><option>Vanilla</option><option>NeoForge</option></select></label><label>Minecraft version<select><option>1.21.10</option><option>1.21.8</option><option>1.21.5</option></select></label></div><label>Start with a modpack <select><option>None — vanilla setup</option><option>Simply Optimized</option><option>Ad Astra</option><option>Create: Astral</option></select></label><p style="font-size:12px">Servers start on demand. Your control plane stays lightweight while the game runtime is provisioned only when needed.</p></div><div class="modal-actions"><button class="ghost" onclick="closeCreate()">Cancel</button><button class="primary" onclick="createServer()">Create server</button></div></div></div>
+<div id="toast" class="toast"></div>
+<script>
+const demoMods=[
+ {name:'Sodium',source:'Modrinth',type:'Mod',desc:'Modern rendering optimization for Fabric',icon:'◇'},
+ {name:'Simple Voice Chat',source:'Modrinth',type:'Mod',desc:'Proximity voice chat for your server',icon:'◉'},
+ {name:'Create',source:'CurseForge',type:'Mod',desc:'A huge automation and engineering mod',icon:'⚙'},
+ {name:'EssentialsX',source:'CurseForge',type:'Plugin',desc:'Commands, homes, warps and moderation',icon:'✦'},
+ {name:'Waystones',source:'CurseForge',type:'Mod',desc:'Teleportation stones for exploration',icon:'◆'},
+ {name:'LuckPerms',source:'Modrinth',type:'Plugin',desc:'Fast, flexible permissions manager',icon:'♢'}
+];
+function $(id){return document.getElementById(id)}
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.classList.remove('show'),2200)}
+function go(page){document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));$(page).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===page));$('crumb').textContent=page==='mods'?'Mods & Plugins':page[0].toUpperCase()+page.slice(1);if(page==='mods')renderMods()}
+document.querySelectorAll('.nav button[data-page]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));
+function openCreate(){$('createModal').classList.add('show');$('newName').focus()}function closeCreate(){$('createModal').classList.remove('show')}
+function createServer(){const n=$('newName').value.trim()||'My SMP';closeCreate();toast('Creating '+n+'…');setTimeout(()=>toast(n+' is ready to configure'),900)}
+function selectServer(name,el){document.querySelectorAll('.server').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');$('serverIp').textContent=name.toLowerCase().replaceAll(' ','-')+'.mh.gg:25565';toast(name+' selected')}
+async function copyIp(){try{await navigator.clipboard.writeText($('serverIp').textContent);toast('Server address copied')}catch{toast('Copy: '+$('serverIp').textContent)}}
+function power(action){toast(action==='start'?'Starting server…':action==='stop'?'Stopping server safely…':'Restarting server…');appendLog('[panel] '+action+' requested','ok')}
+function installItem(name){toast('Queued '+name+' for installation');appendLog('[installer] queued '+name,'ok')}
+function renderMods(){const q=$('modSearch')?.value.toLowerCase()||'';const src=$('source')?.value||'All sources';$('catalog').innerHTML=demoMods.filter(m=>(!q||(m.name+' '+m.desc).toLowerCase().includes(q))&&(src==='All sources'||m.source===src)).map(m=>'<div class="mod"><div class="mod-icon">'+m.icon+'</div><div><h3>'+m.name+' <span style="color:#587e87;font-weight:500">· '+m.source+'</span></h3><p>'+m.type+' · '+m.desc+'</p></div><button class="install" onclick="installItem(\''+m.name+'\')">Install</button></div>').join('')||'<div class="empty"><strong>No matches</strong>Try another search or source.</div>'}
+function filterMods(){renderMods()}
+const boot=[
+ ['10:34:01','[server] Preparing Paper 1.21.10…','ok'],
+ ['10:34:03','[server] Loading properties',''],
+ ['10:34:04','[server] Loading 6 plugins',''],
+ ['10:34:05','[world] Loading spawn chunks',''],
+ ['10:34:07','[server] Done (4.812s)! Type "help" for help.','ok'],
+ ['10:34:09','[player] Manjiro joined the game','ok'],
+ ['10:34:11','[player] Zenitsu joined the game','ok']
+];
+function appendLog(msg,kind=''){['consoleMini','consoleFull'].forEach(id=>{const box=$(id);if(!box)return;const d=document.createElement('div');d.className='line';d.innerHTML='<span class="time">10:34:'+String(new Date().getSeconds()).padStart(2,'0')+'</span> '+(kind?'<span class="'+kind+'">'+escapeHtml(msg)+'</span>':escapeHtml(msg));box.appendChild(d);box.scrollTop=box.scrollHeight})}
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function sendCommand(input){const v=input.value.trim();if(!v)return;appendLog('> '+v,'warn');setTimeout(()=>appendLog('[server] Command accepted: '+v,'ok'),250);input.value=''}
+boot.forEach(([t,m,k])=>['consoleMini','consoleFull'].forEach(id=>{const box=$(id);if(box){const d=document.createElement('div');d.className='line';d.innerHTML='<span class="time">'+t+'</span> <span class="'+k+'">'+escapeHtml(m)+'</span>';box.appendChild(d)}}));
+setInterval(()=>{const c=Math.floor(18+Math.random()*22);$('cpu').textContent=c+'%';$('cpu').parentElement.querySelector('i').style.width=c+'%'},3000);
+setInterval(()=>{appendLog(Math.random()>.5?'[tick] autosave complete':'[metrics] TPS 20.0 · MSPT 46ms','ok')},7000);
+renderMods();
+</script>
+</body>
+</html>
