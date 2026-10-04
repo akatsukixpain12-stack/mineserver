@@ -32,7 +32,7 @@ async def _legacy_resolve_jar_url(software,mc):
 def agent_source():return (Path(__file__).resolve().parents[1]/"agent"/"agent.py").read_text()
 def startup_script(server:dict[str,Any],jar_url):
     a=base64.b64encode(agent_source().encode()).decode()
-    meta=base64.b64encode(json.dumps({"server_id":server["id"],"agent_token":server["agent_token"],"control_url":settings.control_url,"jar_url":jar_url,"memory_mb":server.get("memory_mb",2048),"runtime":server.get("software","vanilla")}).encode()).decode()
+    meta=base64.b64encode(json.dumps({"server_id":server["id"],"agent_token":server["agent_token"],"control_url":settings.control_url,"jar_url":jar_url,"memory_mb":server.get("memory_mb",2048),"runtime":server.get("software","vanilla"),"java_major":java_major_for_minecraft(server.get("mc_version","1.21.10"))}).encode()).decode()
     return f"""#!/bin/bash
 set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
