@@ -91,7 +91,15 @@ function setLoginStatus(t,error=false){const e=$('loginStatus');if(e){e.textCont
 function showLogin(message=''){$('loginGate').style.display='grid';if(message)setLoginStatus(message,true)}
 function hideLogin(){$('loginGate').style.display='none'}
 function googleCredential(resp){if(!resp?.credential)return;state.googleToken=resp.credential;sessionStorage.setItem('mineserver_google_token',resp.credential);finishLogin().catch(e=>{state.googleToken='';sessionStorage.removeItem('mineserver_google_token');showLogin(e.message||'Google sign-in failed')})}
-async function initGoogle(clientId){state.googleClientId=clientId||localStorage.getItem('mineserver_google_client_id')||'';if(!state.googleClientId){setLoginStatus('Google login needs GOOGLE_CLIENT_ID on the control plane.',true);return}await new Promise((resolve,reject)=>{let n=0;const t=setInterval(()=>{if(window.google?.accounts?.id){clearInterval(t);resolve()}else if(++n>100){clearInterval(t);reject(Error('Google Identity Services did not load'))}},100)});google.accounts.id.initialize({client_id:state.googleClientId,callback:googleCredential,auto_select:false,cancel_on_tap_outside:true});google.accounts.id.renderButton(document.getElementById('googleButton'),{theme:'outline',size:'large',shape:'rectangular',text:'signin_with',width:330})}
+async function initGoogle(clientId){
+  state.googleClientId=clientId||localStorage.getItem('mineserver_google_client_id')||'';
+  if(!state.googleClientId){setLoginStatus('Google sign-in is not configured yet. Enter the Web Client ID below.',true);showApiSetup();return false}
+  await new Promise((resolve,reject)=>{let n=0;const t=setInterval(()=>{if(window.google?.accounts?.id){clearInterval(t);resolve()}else if(++n>150){clearInterval(t);reject(Error('Google Identity Services did not load. Check the browser network/ad blocker.'))}},100)});
+  google.accounts.id.initialize({client_id:state.googleClientId,callback:googleCredential,auto_select:false,cancel_on_tap_outside:true});
+  const box=document.getElementById('googleButton');box.innerHTML='';
+  google.accounts.id.renderButton(box,{theme:'outline',size:'large',shape:'rectangular',text:'signin_with',width:330});
+  return true
+}
 async function finishLogin(){if(!state.googleToken)throw Error('Google sign-in required');const d=await api('/api/auth/check',{method:'POST'});state.user=d.user||null;$('accountName').textContent=state.user?.name||'Google account';$('accountEmail').textContent=state.user?.email||'Signed in';hideLogin();await loadServers();await loadRuntimes()}
 function signOut(){sessionStorage.removeItem('mineserver_google_token');state.googleToken='';if(state.ws)try{state.ws.close()}catch{}location.reload()}
 async function api(path,opt={}){if(!state.apiBase)throw Error('Mineserver control-plane URL is not configured');const headers=Object.assign({'Content-Type':'application/json'},opt.headers||{});if(state.googleToken)headers.Authorization='Bearer '+state.googleToken;const r=await fetch(apiUrl(path),{...opt,headers});const ct=r.headers.get('content-type')||'';let d=null;if(ct.includes('application/json')){try{d=await r.json()}catch{}}else{const raw=await r.text();if(raw.trimStart().startsWith('<!doctype')||raw.trimStart().startsWith('<html'))throw Error('Mineserver API URL points to a web page, not the backend. Set the Cloud Run control-plane URL.');throw Error('Mineserver API returned a non-JSON response.')}if(r.status===401){showLogin('Your Google session expired. Please sign in again.');throw Error(d?.detail||'Google sign-in required')}if(!r.ok)throw Error(d?.detail||d?.message||'Request failed');return d}
@@ -99,8 +107,22 @@ document.querySelectorAll('.nav button[data-page]').forEach(b=>b.onclick=()=>go(
 function go(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$(p).classList.add('active');$('crumb').textContent=p==='software'?'Software & Mods':p[0].toUpperCase()+p.slice(1);if(p==='console')connectConsole();if(p==='files')loadFiles(state.path);if(p==='players')renderPlayers()}
 function openCreate(){$('createModal').classList.add('show');loadRuntimes()}
 function closeCreate(){$('createModal').classList.remove('show')}
-async function loadRuntimes(){try{const d=await api('/api/catalog/runtimes');state.runtimes=d.runtimes||[];$('runtimeCount').textContent=state.runtimes.length+' runtime families';$('runtimeGrid').innerHTML=state.runtimes.map((r,i)=>'<button class="runtime '+(i===0?'selected':'')+'" onclick="selectRuntime(\''+esc(r.id)+'\')"><b>'+esc(r.name)+'</b><small>'+esc(r.description||'')+'</small></button>').join('');if(state.runtimes.length)selectRuntime(state.runtime||state.runtimes[0].id)}catch(e){toast(e.message)}}
-async function selectRuntime(id){state.runtime=id;document.querySelectorAll('.runtime').forEach(b=>b.classList.toggle('selected',b.querySelector('b')?.textContent===state.runtimes.find(r=>r.id===id)?.name));$('versions').innerHTML='<div class="empty">Loading live versions…</div>';try{if(!Object.keys(state.versions).length){const d=await api('/api/catalog/versions');state.versions=d.versions||{}}renderVersions()}catch(e){toast(e.message);$('versions').innerHTML='<div class="empty">Version catalog unavailable.</div>'}}
+async function loadRuntimes(){try{const d=await api('/api/catalog/runtimes');state.runtimes=d.runtimes||[];$('runtimeCount').textContent=state.runtimes.length+' runtime families';$('runtimeGrid').innerHTML=state.runtimes.map((r,i)=>'<button class="runtime '+(i===0?'selected':'')+'" data-runtime="'+esc(r.id)+'" onclick="selectRuntime(\''+esc(r.id)+'\')"><b>'+esc(r.name)+'</b><small>'+esc(r.description||'')+'</small></button>').join('');if(state.runtimes.length)selectRuntime(state.runtime||state.runtimes[0].id)}catch(e){toast(e.message)}}
+async function selectRuntime(id){
+  state.runtime=id;
+  document.querySelectorAll('.runtime').forEach(b=>b.classList.toggle('selected',b.dataset.runtime===id));
+  $('versions').innerHTML='<div class="empty">Loading live versions…</div>';
+  try{
+    if(!Object.keys(state.versions).length){
+      const d=await api('/api/catalog/versions');
+      state.versions=d.versions||{};
+    }
+    renderVersions()
+  }catch(e){
+    $('versionCount').textContent='Unavailable';
+    $('versions').innerHTML='<div class="empty"><b>Version catalog unavailable</b>'+esc(e.message)+'</div>';
+  }
+}
 function renderVersions(){const list=state.versions[state.runtime]||[];$('versionCount').textContent=list.length+' published versions';state.version=state.version&&list.some(v=>v.id===state.version)?state.version:(list[0]?.id||null);filterVersions()}
 function filterVersions(){const q=($('versionSearch').value||'').toLowerCase();const list=state.versions[state.runtime]||[];const out=list.filter(v=>String(v.id).toLowerCase().includes(q)).slice(0,160);$('versions').innerHTML=out.map(v=>'<button class="version '+(v.id===state.version?'selected':'')+'" onclick="chooseVersion(\''+esc(v.id)+'\')">'+esc(v.id)+(v.type&&v.type!=='release'?' · '+esc(v.type):'')+'</button>').join('')||'<div class="empty">No matching versions.</div>'}
 function chooseVersion(v){state.version=v;filterVersions()}
@@ -130,7 +152,25 @@ function saveFile(){if(window.editingPath&&state.ws?.readyState===1)state.ws.sen
 function renderPlayers(){const s=current();if(!s){$('playerCount').textContent='—';$('capacityNumber').textContent='—';$('playerList').innerHTML='<div class="empty"><b>No server selected</b></div>';return}const p=s.players||[];$('playerCount').textContent=(s.players_online||0)+' / '+(s.max_players||0);$('capacityNumber').textContent=(s.players_online||0)+' / '+(s.max_players||0);$('playerList').innerHTML=p.length?p.map(n=>'<div class="prow"><div class="skin"></div><b>'+esc(n)+'</b><span>online now</span></div>').join(''):'<div class="empty"><b>No players online</b>No placeholder players are generated.</div>'}
 async function createServer(){const name=$('newName').value.trim();if(!name)return toast('Enter a server name');if(!state.runtime||!state.version)return toast('Choose software and Minecraft version');try{closeCreate();toast('Provisioning real server…');const d=await api('/api/servers',{method:'POST',body:JSON.stringify({name,region:$('newRegion').value,software:state.runtime,mc_version:state.version,memory_mb:Number($('newMemory').value),public:$('newPublic').value==='true'})});state.servers.push(d.server);state.selected=d.server.id;renderServers();await selectServer(d.server.id);toast('Server created; waiting for runtime')}catch(e){toast(e.message)}}
 async function refreshAll(){await loadServers();if(state.selected)await refreshStats();toast('Live data refreshed')}
-async function boot(){try{if(!state.apiBase){showApiSetup();setLoginStatus('Connect the web panel to the Mineserver control plane.',true);return}const r=await fetch(apiUrl('/api/config'));const ct=r.headers.get('content-type')||'';if(!ct.includes('application/json'))throw Error('The control-plane URL returned HTML instead of JSON.');const cfg=await r.json();await initGoogle(cfg.google_client_id);if(state.googleToken){try{await finishLogin()}catch(e){sessionStorage.removeItem('mineserver_google_token');state.googleToken='';showLogin(e.message||'Please sign in with Google')}}else setLoginStatus('Sign in with Google to continue.')}catch(e){showApiSetup();showLogin(e.message||'Unable to connect to Mineserver')}}
+async function boot(){
+  try{
+    if(!state.apiBase){showApiSetup();setLoginStatus('Connect this web panel to the Mineserver API.',true);return}
+    const r=await fetch(apiUrl('/api/config'),{headers:{'Accept':'application/json'}});
+    const ct=r.headers.get('content-type')||'';
+    if(!ct.includes('application/json')){
+      const raw=await r.text();
+      throw Error(raw.trimStart().startsWith('<')?'The API URL points to the web page, not FastAPI. Use the Cloud Run control-plane URL.':'Mineserver API returned a non-JSON response.')
+    }
+    if(!r.ok)throw Error('Mineserver API returned HTTP '+r.status)
+    const cfg=await r.json();
+    const ready=await initGoogle(cfg.google_client_id);
+    if(!ready)return;
+    if(state.googleToken){
+      try{await finishLogin()}catch(e){sessionStorage.removeItem('mineserver_google_token');state.googleToken='';showLogin(e.message||'Please sign in with Google')}
+    }else setLoginStatus('Sign in with Google to load your servers.')
+  }catch(e){showApiSetup();showLogin(e.message||'Unable to connect to Mineserver')}
+  setTimeout(()=>{if(state.apiBase&&!state.googleClientId)showApiSetup()},500)
+}
 boot();
 </script>
 </body>

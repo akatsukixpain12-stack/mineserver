@@ -3,6 +3,8 @@ import re
 import xml.etree.ElementTree as ET
 import httpx
 from fastapi import HTTPException
+from .config import settings
+import asyncio
 
 UA="MineHub/2.0"
 
@@ -48,21 +50,27 @@ async def maven_versions(client,base):
     root=ET.fromstring(r.text)
     return [{"id":x.text,"type":"release"} for x in root.findall(".//version") if x.text]
 
+async def safe_call(fn):
+    try:
+        return await fn()
+    except Exception:
+        return []
+
 async def catalog():
-    async with httpx.AsyncClient(timeout=25) as c:
-        results={}
-        results["vanilla"]=await vanilla_versions(c)
-        for p in ("paper","folia","purpur"):
-            try: results[p]=await paper_versions(c,p)
-            except Exception: results[p]=[]
-        results["fabric"]=await fabric_versions(c)
-        results["quilt"]=await quilt_versions(c)
-        try: results["forge"]=await maven_versions(c,"https://maven.minecraftforge.net/net/minecraftforge/forge/maven-metadata.xml")
-        except Exception: results["forge"]=[]
-        try: results["neoforge"]=await maven_versions(c,"https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml")
-        except Exception: results["neoforge"]=[]
-        results["mineserver"]=[{"id":"mineserver-nightly","type":"native","minecraft":"bundled"}]
-        results["sponge"]=[]
+    async with httpx.AsyncClient(timeout=12) as c:
+        tasks = {
+            "vanilla": safe_call(lambda: vanilla_versions(c)),
+            "paper": safe_call(lambda: paper_versions(c, "paper")),
+            "folia": safe_call(lambda: paper_versions(c, "folia")),
+            "purpur": safe_call(lambda: paper_versions(c, "purpur")),
+            "fabric": safe_call(lambda: fabric_versions(c)),
+            "quilt": safe_call(lambda: quilt_versions(c)),
+            "forge": safe_call(lambda: maven_versions(c, "https://maven.minecraftforge.net/net/minecraftforge/forge/maven-metadata.xml")),
+            "neoforge": safe_call(lambda: maven_versions(c, "https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml")),
+        }
+        values = await asyncio.gather(*tasks.values())
+        results = dict(zip(tasks.keys(), values))
+        results["mineserver"] = [{"id":"mineserver-nightly","type":"native","minecraft":"bundled"}]
         return results
 
 async def resolve_runtime(runtime,mc):
