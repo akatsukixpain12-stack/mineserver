@@ -219,6 +219,8 @@ async def remove(sid,u=Depends(user)):
     vm=s.get("vm_name")
     if vm:
         await asyncio.to_thread(delete_vm,vm,s.get("zone"))
+    for job in store.list_schedules(server_id=sid):
+        store.delete_schedule(job["id"])
     store.delete_server(sid)
     return {"ok":True}
 
