@@ -79,7 +79,7 @@ async def create(body:CreateServer,u=Depends(user)):
     sw=body.software.lower()
     if sw not in {x["id"] for x in RUNTIMES}: raise HTTPException(400,"Unsupported Minecraft runtime")
     sid=uuid.uuid4().hex
-    s={"id":sid,"owner_id":u["id"],"owner_email":u["email"],"owner_name":u["name"],"name":body.name,"region":body.region,"software":sw,"mc_version":body.mc_version,"memory_mb":body.memory_mb,"public":body.public,"status":"provisioning","vm_name":f"minehub-{sid[:12]}","agent_token":secrets.token_urlsafe(32),"created_at":now(),"players_online":0,"players":[],"max_players":20,"metrics":{},"game_address":None}
+    s={"id":sid,"owner_id":u["id"],"owner_email":u["email"],"owner_name":u["name"],"name":body.name,"region":body.region,"zone":{"asia-south1":"asia-south1-a","asia-southeast1":"asia-southeast1-a","us-central1":"us-central1-a","europe-west1":"europe-west1-b"}.get(body.region,settings.compute_zone),"software":sw,"mc_version":body.mc_version,"memory_mb":body.memory_mb,"public":body.public,"status":"provisioning","vm_name":f"minehub-{sid[:12]}","agent_token":secrets.token_urlsafe(32),"created_at":now(),"players_online":0,"players":[],"max_players":20,"metrics":{},"game_address":None}
     store.put_server(s)
     try:
         jar=await resolve_jar_url(sw,body.mc_version)
@@ -103,14 +103,14 @@ async def power(sid,action,u=Depends(user)):
     if a:
         await a.send_json({"type":"power","action":action})
     else:
-        await asyncio.to_thread(vm_action,s["vm_name"],"reset" if action=="restart" else action)
+        await asyncio.to_thread(vm_action,s["vm_name"],"reset" if action=="restart" else action,s.get("zone"))
     store.update_server(sid,status={"start":"starting","stop":"stopping","restart":"restarting"}[action])
     return {"ok":True,"action":action}
 
 @app.delete("/api/servers/{sid}")
 async def remove(sid,u=Depends(user)):
     s=store.get_server(sid);owns(s,u)
-    await asyncio.to_thread(delete_vm,s["vm_name"]);store.delete_server(sid)
+    await asyncio.to_thread(delete_vm,s["vm_name"],s.get("zone"));store.delete_server(sid)
     return {"ok":True}
 
 @app.get("/api/servers/{sid}/stats")
