@@ -1,0 +1,28 @@
+[package]
+name = "mineserver"
+version.workspace = true
+description = "Mineserver headless Rust Minecraft server core."
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+
+[dependencies]
+pumpkin-core.workspace = true
+pumpkin-wasm-host.workspace = true
+pumpkin-config.workspace = true
+pumpkin-data = { workspace = true, features = ["default"] }
+pumpkin-util.workspace = true
+pumpkin-world.workspace = true
+
+rayon.workspace = true
+rustls.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "signal"] }
+tracing.workspace = true
+console-subscriber = { workspace = true, optional = true }
+
+[features]
+console-subscriber = ["dep:console-subscriber"]
+
+[lints]
+workspace = true

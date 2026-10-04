@@ -14,6 +14,7 @@ class Settings:
     google_client_id: str = os.getenv("GOOGLE_CLIENT_ID", "")
     cors_origins: str = os.getenv("CORS_ORIGINS", "*")
     curseforge_api_key: str = os.getenv("CURSEFORGE_API_KEY", "")
+    mineserver_binary_url: str = os.getenv("MINESERVER_BINARY_URL", "https://github.com/akatsukixpain12-stack/mineserver/releases/download/mineserver-nightly/mineserver-linux-x64")
     modrinth_user_agent: str = os.getenv("MODRINTH_USER_AGENT", "akatsukixpain12-stack/mineserver/1.0")
     firestore_collection: str = os.getenv("FIRESTORE_COLLECTION", "minehub_servers")
     local_db: str = os.getenv("LOCAL_DB", "./minehub.db")

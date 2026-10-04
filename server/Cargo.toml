@@ -1,7 +1,7 @@
 [workspace]
 resolver = "3"
 members = [
-    "crates/pumpkin",
+    "crates/mineserver",
     "crates/pumpkin-core",
     "crates/pumpkin-api-macros",
     "crates/pumpkin-auth",
@@ -10,7 +10,6 @@ members = [
     "crates/pumpkin-config",
     "crates/pumpkin-data",
     "crates/pumpkin-scheduler",
-    "crates/pumpkin-gametest",
     "crates/pumpkin-inventory",
     "crates/pumpkin-macros",
     "crates/pumpkin-nbt",
@@ -25,8 +24,7 @@ members = [
     "crates/pumpkin-wasm-host-v0_2",
     "crates/pumpkin-world",
     "tools/pumpkin-codegen",
-    "tools/pumpkin-fuzzer",
-]
+undefined]
 
 # [workspace.lints.rust]
 # missing_docs = "warn"

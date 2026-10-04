@@ -1,7 +1,9 @@
-# Mineserver server core
+# Mineserver native server core
 
-This directory is a vendored copy of Pumpkin at commit `a8db585158ba109b4664eb755d7be76f20ac8f6b`.
+This directory contains the headless Rust Minecraft server core used by the Mineserver web hosting control plane.
 
-The upstream source remains under its original GPL-3.0 license and retains its required copyright and license notices.
+It is derived from Pumpkin at commit `a8db585158ba109b4664eb755d7be76f20ac8f6b`. Upstream GPL-3.0 copyright and license notices remain in the source tree.
 
-Mineserver's control-plane and hosting integration lives outside this vendored source. The built server binary is exposed by the build tooling as `mineserver` without removing the upstream attribution.
+This core is **not a web UI**. The browser dashboard lives at the repository root and talks to the FastAPI control plane; the control plane provisions and supervises this native server process.
+
+The executable package is named `mineserver`, and release builds produce `mineserver` / `mineserver.exe`.

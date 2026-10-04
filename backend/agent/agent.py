@@ -12,9 +12,9 @@ async def send(ws,x):
 def launch():
     global process
     if process and process.poll() is None:return
-    if RUNTIME=="pumpkin":
-        binary=SERVER/"pumpkin"
-        if not binary.exists(): raise RuntimeError("Pumpkin binary is missing")
+    if RUNTIME in {"mineserver","pumpkin"}:
+        binary=SERVER/"mineserver"
+        if not binary.exists(): raise RuntimeError("Mineserver binary is missing")
         cmd=[str(binary)]
     elif RUNTIME in {"forge","neoforge"} and (SERVER/"run.sh").exists():
         cmd=["bash","run.sh"]
