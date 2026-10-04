@@ -1,0 +1,8 @@
+fastapi==0.117.1
+uvicorn[standard]==0.37.0
+httpx==0.28.1
+websockets==15.0.1
+psutil==7.0.0
+google-cloud-compute==1.38.0
+google-cloud-firestore==2.21.0
+pydantic==2.11.9
