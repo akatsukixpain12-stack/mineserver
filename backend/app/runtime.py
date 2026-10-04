@@ -15,6 +15,7 @@ RUNTIMES=[
  {"id":"quilt","name":"Quilt","kind":"server","family":"modded","loaders":["quilt"],"description":"Modern Fabric-compatible mod loader"},
  {"id":"forge","name":"Forge","kind":"server","family":"modded","loaders":["forge"],"description":"Classic Minecraft mod loader"},
  {"id":"neoforge","name":"NeoForge","kind":"server","family":"modded","loaders":["neoforge"],"description":"Modern Forge-family mod loader"},
+ {"id":"pumpkin","name":"Pumpkin","kind":"server","family":"native","loaders":[],"description":"Native Rust Minecraft server runtime from Pumpkin-MC"},
  ]
 
 async def get_json(client,url,params=None):
@@ -60,6 +61,10 @@ async def catalog():
         except Exception: results["forge"]=[]
         try: results["neoforge"]=await maven_versions(c,"https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml")
         except Exception: results["neoforge"]=[]
+        try:
+            rel=await get_json(c,"https://api.github.com/repos/Pumpkin-MC/Pumpkin/releases/latest")
+            results["pumpkin"]=[{"id":rel.get("tag_name"),"type":"release","minecraft":rel.get("tag_name")}]
+        except Exception: results["pumpkin"]=[]
         results["sponge"]=[]
         return results
 
@@ -114,6 +119,13 @@ async def resolve_runtime(runtime,mc):
             if not candidates: raise ValueError(f"NeoForge does not publish {mc}")
             ver=candidates[-1]
             return f"https://maven.neoforged.net/releases/net/neoforged/neoforge/{ver}/neoforge-{ver}-installer.jar"
+
+        if runtime=="pumpkin":
+            rel=await get_json(c,"https://api.github.com/repos/Pumpkin-MC/Pumpkin/releases/latest")
+            assets=rel.get("assets",[])
+            asset=next((x for x in assets if x.get("name")=="pumpkin-X64-Linux"),None)
+            if not asset: raise ValueError("Pumpkin Linux x64 release asset is unavailable")
+            return asset["browser_download_url"]
 
         raise ValueError(f"Unsupported runtime: {runtime}")
 
