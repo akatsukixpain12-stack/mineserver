@@ -21,7 +21,7 @@ Cloud Run is only the control plane. Cloud Run WebSockets have a maximum request
 5. Give the Cloud Run service account permission to create/manage Compute Engine instances and read the secrets.
 6. Build/deploy backend/ with scripts/deploy-gcp.sh.
 7. Set CONTROL_URL to the Cloud Run HTTPS URL and redeploy. The VM agents then connect to wss://<cloud-run>/agent/ws.
-8. Put the admin token into the website login field. Creating a server then creates a real VM.
+8. Set `GOOGLE_CLIENT_ID` on Cloud Run and configure the Google OAuth application's Authorized JavaScript origins for the deployed web panel. Creating a server then creates a real VM.
 
 ## Security before public launch
 

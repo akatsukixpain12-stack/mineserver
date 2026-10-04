@@ -90,7 +90,7 @@ The local process is the actual API/UI; it does not create fake servers or fake 
 
 ## Architecture direction — Pumpkin-inspired, web-based
 
-MineHub is intentionally **not a copy of Pumpkin's UI or source**. Pumpkin is a native Rust Minecraft server focused on performance, protocol/game implementation, and a small runtime footprint. MineHub uses that same "real runtime, no fake dashboard" philosophy but exposes it through a web control plane.
+Mineserver uses the complete vendored Pumpkin source as its native Rust server core, while the web control plane provides account storage, provisioning, console, files, players, metrics and marketplace functions.
 
 ### Version strategy
 
@@ -133,6 +133,5 @@ Cloud Run is the web/control layer; Minecraft itself runs on Compute Engine beca
 
 - **Google account storage:** the dashboard requires Google sign-in and restores the servers belonging to that account. There is no fake account, fake avatar, fake email, or fake player list.
 - **Real runtime:** Minecraft processes run on the provisioned Compute Engine VM, not inside the browser or as fake UI state.
-- **Pumpkin:** the repository contains `vendor/Pumpkin` as a Git submodule pinned to the upstream Pumpkin source commit. The panel also exposes Pumpkin as a native runtime and downloads the matching official Linux release at provisioning time.
-- Pumpkin is GPL-3.0 licensed; keep the upstream license/attribution when distributing the submodule or derivative work.
+- **Pumpkin:** the repository contains the complete vendored Pumpkin source under `server/`, pinned to the upstream commit recorded in `UPSTREAM-PUMPKIN.md`. The web control plane builds/launches the vendored Rust core while preserving Pumpkin's GPL-3.0 attribution and license files.
 - The current upstream Pumpkin release is a native Rust server targeting Minecraft 26.3, so it is offered separately from the multi-version Java runtime catalog rather than pretending Pumpkin supports every Minecraft release.
