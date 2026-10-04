@@ -7,7 +7,7 @@ spec:
     metadata:
       annotations:
         autoscaling.knative.dev/minScale: "1"
-        autoscaling.knative.dev/maxScale: "3"
+        autoscaling.knative.dev/maxScale: "1"
         run.googleapis.com/sessionAffinity: "true"
     spec:
       timeoutSeconds: 3600
@@ -16,6 +16,8 @@ spec:
         ports:
         - containerPort: 8080
         env:
+        - name: APP_NAME
+          value: Mineserver
         - name: GOOGLE_CLIENT_ID
           value: REPLACE_WITH_GOOGLE_WEB_CLIENT_ID
         - name: GOOGLE_CLOUD_PROJECT
@@ -25,6 +27,8 @@ spec:
         - name: COMPUTE_NETWORK
           value: default
         - name: CONTROL_URL
+          value: https://REPLACE_AFTER_DEPLOY
+        - name: CORS_ORIGINS
           value: https://REPLACE_AFTER_DEPLOY
         - name: ADMIN_TOKEN
           valueFrom:
