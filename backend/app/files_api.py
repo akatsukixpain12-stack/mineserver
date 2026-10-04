@@ -2,7 +2,7 @@ from __future__ import annotations
 import asyncio,base64,os,shlex
 from pathlib import Path
 from fastapi import HTTPException
-ROOT=Path("/opt/minehub/server")
+ROOT=Path("/opt/mineserver/server")
 ALLOWED={"server.properties","eula.txt","whitelist.json","ops.json","banned-players.json","banned-ips.json"}
 def safe(rel:str)->Path:
     rel=rel.strip().replace("\\","/")

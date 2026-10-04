@@ -2,7 +2,7 @@ from __future__ import annotations
 import asyncio,json,re,shutil,time,urllib.request,subprocess,zipfile,hashlib,tempfile,os
 from pathlib import Path
 import psutil,websockets
-ROOT=Path("/opt/minehub");SERVER=ROOT/"server";C=json.loads((ROOT/"config.json").read_text());BASE=C["control_url"].rstrip("/").replace("https://","wss://").replace("http://","ws://");URL=f"{BASE}/agent";process=None;players=set();max_players=20;lock=asyncio.Lock();MEM=int(C.get("memory_mb") or ((psutil.virtual_memory().total//1048576)*.75));RUNTIME=str(C.get("runtime") or "vanilla").lower();JAVA_BIN=shutil.which("java") or "/usr/bin/java"
+ROOT=Path("/opt/mineserver");SERVER=ROOT/"server";C=json.loads((ROOT/"config.json").read_text());BASE=C["control_url"].rstrip("/").replace("https://","wss://").replace("http://","ws://");URL=f"{BASE}/agent";process=None;players=set();max_players=20;lock=asyncio.Lock();MEM=int(C.get("memory_mb") or ((psutil.virtual_memory().total//1048576)*.75));RUNTIME=str(C.get("runtime") or "vanilla").lower();JAVA_BIN=shutil.which("java") or "/usr/bin/java"
 def safe(rel):
     p=(SERVER/rel.strip().replace("\\","/")).resolve()
     if p!=SERVER and SERVER not in p.parents:raise ValueError("Invalid path")
@@ -38,7 +38,7 @@ def backup():
     b=ROOT/"backups";b.mkdir(exist_ok=True);name="backup-"+time.strftime("%Y%m%d-%H%M%S");return shutil.make_archive(str(b/name),"zip",root_dir=SERVER)
 def download_zip_pack(url):
     tmp=ROOT/"serverpack.tmp.zip"
-    req=urllib.request.Request(url,headers={"User-Agent":"MineHub-Agent/2.0"})
+    req=urllib.request.Request(url,headers={"User-Agent":"Mineserver-Agent/2.0"})
     with urllib.request.urlopen(req,timeout=180) as r,open(tmp,"wb") as f: shutil.copyfileobj(r,f)
     if not zipfile.is_zipfile(tmp): raise ValueError("Server pack is not a valid ZIP")
     with zipfile.ZipFile(tmp) as z:
@@ -53,7 +53,7 @@ def download_zip_pack(url):
 
 def download_modpack(url):
     tmp=ROOT/"modpack.tmp.mrpack"
-    req=urllib.request.Request(url,headers={"User-Agent":"MineHub-Agent/2.0"})
+    req=urllib.request.Request(url,headers={"User-Agent":"Mineserver-Agent/2.0"})
     with urllib.request.urlopen(req,timeout=180) as r,open(tmp,"wb") as f: shutil.copyfileobj(r,f)
     if not zipfile.is_zipfile(tmp): raise ValueError("Downloaded modpack is not a valid ZIP/.mrpack")
     with zipfile.ZipFile(tmp) as z:
@@ -71,7 +71,7 @@ def download_modpack(url):
             if not urls: raise ValueError("Modpack entry has no download URL: "+rel)
             dest.parent.mkdir(parents=True,exist_ok=True)
             part=dest.with_suffix(dest.suffix+".part")
-            req2=urllib.request.Request(urls[0],headers={"User-Agent":"MineHub-Agent/2.0"})
+            req2=urllib.request.Request(urls[0],headers={"User-Agent":"Mineserver-Agent/2.0"})
             with urllib.request.urlopen(req2,timeout=120) as r,open(part,"wb") as f: shutil.copyfileobj(r,f)
             expected=item.get("hashes",{}).get("sha512") or item.get("hashes",{}).get("sha1")
             if expected:
@@ -92,7 +92,7 @@ def download_modpack(url):
     return index.get("name","Modrinth modpack")
 
 def download(url,target):
-    folder=safe(target);folder.mkdir(parents=True,exist_ok=True);name=url.split("?")[0].rsplit("/",1)[-1] or "download.jar";out=folder/name;tmp=out.with_suffix(out.suffix+".part");req=urllib.request.Request(url,headers={"User-Agent":"MineHub-Agent/2.0"})
+    folder=safe(target);folder.mkdir(parents=True,exist_ok=True);name=url.split("?")[0].rsplit("/",1)[-1] or "download.jar";out=folder/name;tmp=out.with_suffix(out.suffix+".part");req=urllib.request.Request(url,headers={"User-Agent":"Mineserver-Agent/2.0"})
     with urllib.request.urlopen(req,timeout=90) as r,open(tmp,"wb") as f:shutil.copyfileobj(r,f)
     tmp.replace(out);return str(out.relative_to(SERVER))
 def parse_player(line):

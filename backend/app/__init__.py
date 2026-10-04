@@ -1,1 +1,1 @@
-"""MineHub control plane package."""
+"""Mineserver control plane package."""
