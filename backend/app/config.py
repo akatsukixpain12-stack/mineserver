@@ -11,6 +11,7 @@ class Settings:
     disk_gb: int = int(os.getenv("MINECRAFT_DISK_GB", "20"))
     control_url: str = os.getenv("CONTROL_URL", "http://localhost:8080").rstrip("/")
     admin_token: str = os.getenv("ADMIN_TOKEN", "")
+    google_client_id: str = os.getenv("GOOGLE_CLIENT_ID", "")
     cors_origins: str = os.getenv("CORS_ORIGINS", "*")
     curseforge_api_key: str = os.getenv("CURSEFORGE_API_KEY", "")
     modrinth_user_agent: str = os.getenv("MODRINTH_USER_AGENT", "akatsukixpain12-stack/mineserver/1.0")
