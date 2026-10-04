@@ -132,5 +132,5 @@ def java_major_for_minecraft(mc:str)->int:
     if n>=18:
         return 17
     if n==17:
-        return 16
+        return 17
     return 8
