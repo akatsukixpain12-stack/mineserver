@@ -2,7 +2,7 @@ from __future__ import annotations
 import asyncio,json,re,shutil,time,urllib.request,subprocess,zipfile,hashlib,tempfile,os
 from pathlib import Path
 import psutil,websockets
-ROOT=Path("/opt/minehub");SERVER=ROOT/"server";C=json.loads((ROOT/"config.json").read_text());BASE=C["control_url"].rstrip("/").replace("https://","wss://").replace("http://","ws://");URL=f"{BASE}/agent/ws?server_id={C['server_id']}&token={C['agent_token']}";MEM=int(C.get("memory_mb",2048));RUNTIME=C.get("runtime","vanilla").lower();process=None;lock=asyncio.Lock();players=set();max_players=20
+ROOT=Path("/opt/minehub");SERVER=ROOT/"server";C=json.loads((ROOT/"config.json").read_text());BASE=C["control_url"].rstrip("/").replace("https://","wss://").replace("http://","ws://");URL=f"{BASE}/agent/ws?server_id={C['server_id']}&token={C['agent_token']}";MEM=int(C.get("memory_mb",2048));RUNTIME=C.get("runtime","vanilla").lower();JAVA_BIN=f"/usr/lib/jvm/java-{C.get('java_major',21)}-openjdk-amd64/bin/java";process=None;lock=asyncio.Lock();players=set();max_players=20
 def safe(rel):
     p=(SERVER/rel.strip().replace("\\","/")).resolve()
     if p!=SERVER and SERVER not in p.parents:raise ValueError("Invalid path")
@@ -12,7 +12,7 @@ async def send(ws,x):
 def launch():
     global process
     if process and process.poll() is None:return
-    cmd=["java",f"-Xms{max(512,MEM//2)}M",f"-Xmx{MEM}M"]
+    cmd=[JAVA_BIN,f"-Xms{max(512,MEM//2)}M",f"-Xmx{MEM}M"]
     if RUNTIME in {"forge","neoforge"} and (SERVER/"run.sh").exists(): cmd=["bash","run.sh"]
     else: cmd += ["-jar","server.jar","nogui"]
     process=subprocess.Popen(cmd,cwd=SERVER,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,bufsize=1)
