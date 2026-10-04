@@ -24,7 +24,7 @@ async def curseforge_search(query,mc,loader,project_type):
     async with httpx.AsyncClient(timeout=20) as c:r=await c.get(f"{CURSEFORGE}/mods/search",params=p,headers=h)
     if r.status_code>=400:raise HTTPException(502,"CurseForge search failed")
     return [{"provider":"curseforge","id":x["id"],"name":x["name"],"description":x.get("summary",""),"icon":(x.get("logo") or {}).get("url"),"downloads":x.get("downloadCount",0),"type":project_type,"slug":x.get("slug")} for x in r.json().get("data",[])]
-async def curseforge_file(mid,mc,loader):
+async def curseforge_file(mid,mc,loader,project_type="mod"):
     if not settings.curseforge_api_key:raise HTTPException(503,"CURSEFORGE_API_KEY is not configured")
     lm={"forge":1,"fabric":4,"quilt":5,"neoforge":6};p={"gameVersion":mc,"pageSize":50}
     if loader in lm:p["modLoaderType"]=lm[loader]
@@ -32,4 +32,15 @@ async def curseforge_file(mid,mc,loader):
     async with httpx.AsyncClient(timeout=20) as c:r=await c.get(f"{CURSEFORGE}/mods/{mid}/files",params=p,headers=h)
     data=r.json().get("data",[]) if r.content else []
     if r.status_code>=400 or not data:raise HTTPException(404,"No compatible CurseForge file")
-    return next((x for x in data if x.get("downloadUrl") and x.get("isAvailable",True)),data[0])
+    available=[x for x in data if x.get("isAvailable",True)]
+    if project_type=="modpack":
+        server_pack=next((x for x in available if x.get("isServerPack") and x.get("downloadUrl")),None)
+        if server_pack:return server_pack
+        linked=next((x for x in available if x.get("serverPackFileId")),None)
+        if linked:
+            rr=await c.get(f"{CURSEFORGE}/mods/{mid}/files/{linked["serverPackFileId"]}",headers=h)
+            if rr.status_code<400:
+                item=rr.json().get("data",{})
+                if item.get("downloadUrl"):return item
+        raise HTTPException(409,"This CurseForge modpack does not publish a server pack")
+    return next((x for x in available if x.get("downloadUrl")),available[0])
