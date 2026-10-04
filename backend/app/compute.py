@@ -5,7 +5,7 @@ from typing import Any
 import httpx
 from google.cloud import compute_v1
 from .config import settings
-from .runtime import resolve_runtime
+from .runtime import resolve_runtime,java_major_for_minecraft
 UA="MineHub/1.0 (https://github.com/akatsukixpain12-stack/mineserver)"
 async def resolve_jar_url(software,mc):
     return await resolve_runtime(software,mc)
