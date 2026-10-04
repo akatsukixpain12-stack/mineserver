@@ -8,6 +8,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from pydantic import BaseModel,Field
 from .compute import create_vm,delete_vm,resolve_jar_url,vm_action
+from .runtime import RUNTIMES,catalog as runtime_catalog
 from .config import settings
 from .providers import curseforge_file,curseforge_search,modrinth_search,modrinth_version
 from .store import store
@@ -76,7 +77,7 @@ async def public_servers():
 @app.post("/api/servers")
 async def create(body:CreateServer,u=Depends(user)):
     sw=body.software.lower()
-    if sw not in {"paper","fabric","vanilla"}: raise HTTPException(400,"Supported runtime: Paper, Fabric, Vanilla")
+    if sw not in {x["id"] for x in RUNTIMES}: raise HTTPException(400,"Unsupported Minecraft runtime")
     sid=uuid.uuid4().hex
     s={"id":sid,"owner_id":u["id"],"owner_email":u["email"],"owner_name":u["name"],"name":body.name,"region":body.region,"software":sw,"mc_version":body.mc_version,"memory_mb":body.memory_mb,"public":body.public,"status":"provisioning","vm_name":f"minehub-{sid[:12]}","agent_token":secrets.token_urlsafe(32),"created_at":now(),"players_online":0,"players":[],"max_players":20,"metrics":{},"game_address":None}
     store.put_server(s)
@@ -124,6 +125,17 @@ async def files(sid,path:str="",u=Depends(user)):
     if not a: raise HTTPException(409,"Runtime agent is offline")
     await a.send_json({"type":"files_list","path":path})
     return {"queued":True,"path":path}
+
+@app.get("/api/catalog/runtimes")
+async def runtimes():
+    return {"runtimes":RUNTIMES}
+
+@app.get("/api/catalog/versions")
+async def versions():
+    try:
+        return {"versions":await runtime_catalog()}
+    except Exception as e:
+        raise HTTPException(502,f"Version catalog unavailable: {e}")
 
 @app.get("/api/catalog/search")
 async def catalog(q:str=Query(""),provider:str="modrinth",mc:str="1.21.10",loader:str="fabric",type:str="mod",u=Depends(user)):
