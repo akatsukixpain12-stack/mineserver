@@ -1,5 +1,5 @@
 from __future__ import annotations
-import asyncio,json,re,shutil,time,urllib.request,subprocess
+import asyncio,json,re,shutil,time,urllib.request,subprocess,zipfile,hashlib,tempfile,os
 from pathlib import Path
 import psutil,websockets
 ROOT=Path("/opt/minehub");SERVER=ROOT/"server";C=json.loads((ROOT/"config.json").read_text());BASE=C["control_url"].rstrip("/").replace("https://","wss://").replace("http://","ws://");URL=f"{BASE}/agent/ws?server_id={C['server_id']}&token={C['agent_token']}";MEM=int(C.get("memory_mb",2048));RUNTIME=C.get("runtime","vanilla").lower();process=None;lock=asyncio.Lock();players=set();max_players=20
@@ -27,6 +27,46 @@ def command(x):
     process.stdin.write(x.lstrip("/")+"\n");process.stdin.flush()
 def backup():
     b=ROOT/"backups";b.mkdir(exist_ok=True);name="backup-"+time.strftime("%Y%m%d-%H%M%S");return shutil.make_archive(str(b/name),"zip",root_dir=SERVER)
+def download_modpack(url):
+    tmp=ROOT/"modpack.tmp.mrpack"
+    req=urllib.request.Request(url,headers={"User-Agent":"MineHub-Agent/2.0"})
+    with urllib.request.urlopen(req,timeout=180) as r,open(tmp,"wb") as f: shutil.copyfileobj(r,f)
+    if not zipfile.is_zipfile(tmp): raise ValueError("Downloaded modpack is not a valid ZIP/.mrpack")
+    with zipfile.ZipFile(tmp) as z:
+        names=set(z.namelist())
+        if "modrinth.index.json" not in names: raise ValueError("Only Modrinth .mrpack server installs are supported")
+        index=json.loads(z.read("modrinth.index.json").decode("utf-8"))
+        if index.get("formatVersion")!=1 or index.get("game")!="minecraft": raise ValueError("Unsupported Modrinth pack format")
+        for item in index.get("files",[]):
+            env=item.get("env",{})
+            if env.get("server")=="unsupported": continue
+            rel=item.get("path","").replace("\\","/")
+            dest=safe(rel)
+            if dest==SERVER or rel.startswith("/") or ".." in Path(rel).parts: raise ValueError("Unsafe modpack path")
+            urls=item.get("downloads",[])
+            if not urls: raise ValueError("Modpack entry has no download URL: "+rel)
+            dest.parent.mkdir(parents=True,exist_ok=True)
+            part=dest.with_suffix(dest.suffix+".part")
+            req2=urllib.request.Request(urls[0],headers={"User-Agent":"MineHub-Agent/2.0"})
+            with urllib.request.urlopen(req2,timeout=120) as r,open(part,"wb") as f: shutil.copyfileobj(r,f)
+            expected=item.get("hashes",{}).get("sha512") or item.get("hashes",{}).get("sha1")
+            if expected:
+                h=hashlib.sha512() if item.get("hashes",{}).get("sha512") else hashlib.sha1()
+                with open(part,"rb") as rf:
+                    for chunk in iter(lambda:rf.read(1024*1024),b""): h.update(chunk)
+                if h.hexdigest().lower()!=expected.lower(): part.unlink(missing_ok=True); raise ValueError("Hash mismatch for "+rel)
+            part.replace(dest)
+        for root in ("overrides","server-overrides"):
+            prefix=root+"/"
+            for name in names:
+                if not name.startswith(prefix) or name.endswith("/"): continue
+                rel=name[len(prefix):]
+                dest=safe(rel)
+                dest.parent.mkdir(parents=True,exist_ok=True)
+                with z.open(name) as src,open(dest,"wb") as dst: shutil.copyfileobj(src,dst)
+    tmp.unlink(missing_ok=True)
+    return index.get("name","Modrinth modpack")
+
 def download(url,target):
     folder=safe(target);folder.mkdir(parents=True,exist_ok=True);name=url.split("?")[0].rsplit("/",1)[-1] or "download.jar";out=folder/name;tmp=out.with_suffix(out.suffix+".part");req=urllib.request.Request(url,headers={"User-Agent":"MineHub-Agent/1.0"})
     with urllib.request.urlopen(req,timeout=90) as r,open(tmp,"wb") as f:shutil.copyfileobj(r,f)
@@ -102,7 +142,10 @@ async def handle(ws,m):
         if was:stop()
         try:
             await send(ws,{"type":"install","status":"backup","name":m.get("name")});await asyncio.to_thread(backup)
-            await send(ws,{"type":"install","status":"download","name":m.get("name")});p=await asyncio.to_thread(download,m["url"],m.get("target","mods"))
+            await send(ws,{"type":"install","status":"download","name":m.get("name")});if m.get("target")=="modpack":
+                p=await asyncio.to_thread(download_modpack,m["url"])
+            else:
+                p=await asyncio.to_thread(download,m["url"],m.get("target","mods"))
             await send(ws,{"type":"install","status":"installed","name":m.get("name"),"path":p})
         finally:
             if was:launch()
